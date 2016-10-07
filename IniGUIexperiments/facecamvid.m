@@ -57,7 +57,7 @@ faceDetector = vision.CascadeObjectDetector();
 % Create the point tracker object.
 pointTracker = vision.PointTracker('MaxBidirectionalError', 2);
 
-
+handles.loop = false;
 % Choose default command line output for facecamvid
 handles.output = hObject;
 
@@ -93,7 +93,8 @@ videoFrame = snapshot(cam);
 frameSize = size(videoFrame);
 
 numPts = 0;
-handles.loop = true;
+handles.loop = true; %Create stop_now in the handles structure
+guidata(hObject,handles);  %Update the GUI data
 
 while handles.loop
 
@@ -105,16 +106,21 @@ while handles.loop
     axes(handles.axes2);
     imshow(videoFrameGray);
     
+    handles = guidata(hObject);  %Get the newest GUI data
+    
     
 
 end
 
 
 
-% --- Executes on button press in pushbutton2.
+% --- Executes on button press in pushbutton1.
 function pushbutton1_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-clear cam
+
 handles.loop = false;
+guidata(hObject, handles); % Update handles structure
+
+
