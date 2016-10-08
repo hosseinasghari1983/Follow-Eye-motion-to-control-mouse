@@ -52,10 +52,9 @@ function facecamvid_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to facecamvid (see VARARGIN)
 
-faceDetector = vision.CascadeObjectDetector();
-
-% Create the point tracker object.
-pointTracker = vision.PointTracker('MaxBidirectionalError', 2);
+handles.faceDetector = vision.CascadeObjectDetector();
+handles.LeftEyeDetector = vision.CascadeObjectDetector('LeftEye');
+handles.RightEyeDetector = vision.CascadeObjectDetector('RightEye');
 
 handles.loop = false;
 % Choose default command line output for facecamvid
@@ -92,23 +91,35 @@ cam = webcam();
 videoFrame = snapshot(cam);
 frameSize = size(videoFrame);
 
-numPts = 0;
+
 handles.loop = true; %Create stop_now in the handles structure
 guidata(hObject,handles);  %Update the GUI data
 
-while handles.loop
 
-    % Get the next frame.
+while handles.loop
+    %Wait for a 16 fps framerate.
+    pause(0.0625);
+    % Get the next frame.    
     videoFrame = snapshot(cam);
-    videoFrameGray = rgb2gray(videoFrame);
+    %Display in first figure.
     axes(handles.axes1);
     imshow(videoFrame);
+    %Detect face and display modified image.
+    videoFrameFace = videoFrame;
+    facebox = step(handles.faceDetector, videoFrameFace);
+    videoOut2 = insertShape(videoFrameFace,'rectangle',facebox,'LineWidth', 3);
     axes(handles.axes2);
-    imshow(videoFrameGray);
+    imshow(videoOut2);
+    %Detect eyes and display modified image.
+    videoFrameEyes = videoFrame;    
+    LeftEyeBox = step(handles.LeftEyeDetector, videoFrameEyes);
+    videoOneEye = insertShape(videoFrameEyes,'rectangle',LeftEyeBox,'LineWidth', 3);
+    RightEyeBox = step(handles.RightEyeDetector, videoFrameEyes);
+    videoOut3 = insertShape(videoOneEye,'rectangle',RightEyeBox,'LineWidth', 3);
+    axes(handles.axes3);
+    imshow(videoOut3);
     
-    handles = guidata(hObject);  %Get the newest GUI data
-    
-    
+    handles = guidata(hObject);  %Get the newest GUI data    
 
 end
 
