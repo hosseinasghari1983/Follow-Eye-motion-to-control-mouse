@@ -22,7 +22,7 @@ function varargout = facecamvid(varargin)
 
 % Edit the above text to modify the response to help facecamvid
 
-% Last Modified by GUIDE v2.5 06-Oct-2016 21:04:34
+% Last Modified by GUIDE v2.5 09-Oct-2016 14:16:21
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,6 +55,12 @@ function facecamvid_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.faceDetector = vision.CascadeObjectDetector();
 handles.LeftEyeDetector = vision.CascadeObjectDetector('LeftEye');
 handles.RightEyeDetector = vision.CascadeObjectDetector('RightEye');
+handles.LeftEyeDetector.MinSize = [50, 50];
+handles.RightEyeDetector.MinSize = [50, 50];
+handles.LeftEyeDetector.MaxSize = [80, 80];
+handles.RightEyeDetector.MaxSize = [80, 80];
+
+
 
 handles.loop = false;
 % Choose default command line output for facecamvid
@@ -101,17 +107,16 @@ while handles.loop
     pause(0.0625);
     % Get the next frame.    
     videoFrame = snapshot(cam);
-    %Display in first figure.
-    axes(handles.axes1);
+    axes(handles.axes2);
     imshow(videoFrame);
     %Detect face and display modified image.
     videoFrameFace = videoFrame;
     facebox = step(handles.faceDetector, videoFrameFace);
     videoOut2 = insertShape(videoFrameFace,'rectangle',facebox,'LineWidth', 3);
-    axes(handles.axes2);
-    imshow(videoOut2);
+    %crop face
+    videoFrameCropped = imcrop(videoFrame,facebox);
     %Detect eyes and display modified image.
-    videoFrameEyes = videoFrame;    
+    videoFrameEyes = videoFrameCropped;
     LeftEyeBox = step(handles.LeftEyeDetector, videoFrameEyes);
     videoOneEye = insertShape(videoFrameEyes,'rectangle',LeftEyeBox,'LineWidth', 3);
     RightEyeBox = step(handles.RightEyeDetector, videoFrameEyes);
@@ -133,5 +138,3 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 
 handles.loop = false;
 guidata(hObject, handles); % Update handles structure
-
-
