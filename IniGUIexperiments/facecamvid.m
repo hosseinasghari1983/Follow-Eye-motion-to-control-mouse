@@ -52,13 +52,13 @@ function facecamvid_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to facecamvid (see VARARGIN)
 
-handles.faceDetector = vision.CascadeObjectDetector();
+handles.faceDetector = vision.CascadeObjectDetector('EyePairBig');
 handles.LeftEyeDetector = vision.CascadeObjectDetector('LeftEye');
 handles.RightEyeDetector = vision.CascadeObjectDetector('RightEye');
-handles.LeftEyeDetector.MinSize = [50, 50];
-handles.RightEyeDetector.MinSize = [50, 50];
-handles.LeftEyeDetector.MaxSize = [80, 80];
-handles.RightEyeDetector.MaxSize = [80, 80];
+%handles.LeftEyeDetector.MinSize = [50, 50];
+%handles.RightEyeDetector.MinSize = [50, 50];
+%handles.LeftEyeDetector.MaxSize = [80, 80];
+%handles.RightEyeDetector.MaxSize = [80, 80];
 
 
 
@@ -112,6 +112,7 @@ while handles.loop
     %Detect face and display modified image.
     videoFrameFace = videoFrame;
     facebox = step(handles.faceDetector, videoFrameFace);
+    if ~isempty(facebox)
     videoOut2 = insertShape(videoFrameFace,'rectangle',facebox,'LineWidth', 3);
     %crop face
     videoFrameCropped = imcrop(videoFrame,facebox);
@@ -123,6 +124,8 @@ while handles.loop
     videoOut3 = insertShape(videoOneEye,'rectangle',RightEyeBox,'LineWidth', 3);
     axes(handles.axes3);
     imshow(videoOut3);
+    end
+    
     
     handles = guidata(hObject);  %Get the newest GUI data    
 
