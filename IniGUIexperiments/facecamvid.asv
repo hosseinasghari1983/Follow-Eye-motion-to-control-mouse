@@ -104,9 +104,8 @@ while handles.loop
     %Detect eyepair.
     eyebox = step(handles.eyeDetector, videoFrame);
     check = size(eyebox)
-    if check(1) > 1 
-        eyebox = eyebox(1,:);
-    end
+    if 
+    eyebox = eyebox(1,:);
     if ~isempty(eyebox)
         %crop left eye and display frame.
         eyebox(3) = floor(eyebox(3)/2);
