@@ -103,7 +103,7 @@ while handles.loop
     imshow(videoFrame);
     %Detect eyepair.
     eyebox = step(handles.eyeDetector, videoFrame);
-    check = size(eyebox)
+    check = size(eyebox);
     if check(1) > 1 
         eyebox = eyebox(1,:);
     end
