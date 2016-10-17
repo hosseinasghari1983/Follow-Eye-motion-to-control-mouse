@@ -110,12 +110,12 @@ while handles.loop
     if ~isempty(eyebox)
         %crop left eye and display frame.
         eyebox(3) = floor(eyebox(3)/2);
-        videoFrameRightEye = imcrop(videoFrame,eyebox);
+        videoFrameRightEye = rgb2gray(imcrop(videoFrame,eyebox));
         axes(handles.axes3);
         imshow(videoFrameRightEye);
         %crop right eye and display frame.
         eyebox(1) = eyebox(1) + eyebox(3);
-        videoFrameLeftEye = imcrop(videoFrame,eyebox);
+        videoFrameLeftEye = rgb2gray(imcrop(videoFrame,eyebox));
         axes(handles.axes1);
         imshow(videoFrameLeftEye);
     end
