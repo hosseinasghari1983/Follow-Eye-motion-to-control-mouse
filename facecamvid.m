@@ -42,6 +42,7 @@ else
     gui_mainfcn(gui_State, varargin{:});
 end
 % End initialization code - DO NOT EDIT
+end
 
 
 % --- Executes just before facecamvid is made visible.
@@ -63,6 +64,7 @@ guidata(hObject, handles);
 
 % UIWAIT makes facecamvid wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
+end
 
 
 % --- Outputs from this function are returned to the command line.
@@ -74,6 +76,7 @@ function varargout = facecamvid_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
+end
 
 
 % --- Executes on button press in pushbutton1.
@@ -82,49 +85,77 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % Create the webcam object.
-cam = webcam();
 
-% Capture one frame to get its size.
-videoFrame = snapshot(cam);
+isTextStart = strcmp(hObject.String,'Start');
+isTextStop = strcmp(hObject.String,'Stop');
 
-handles.loop = true; %Create stop_now in the handles structure
-guidata(hObject,handles);  %Update the GUI data
+if isTextStart
+    hObject.String = 'Stop';
+    cam = webcam();
+    handles.loop = true; %Create stop_now in the handles structure
+    guidata(hObject,handles);  %Update the GUI data
 
 
-while handles.loop
-    %Wait for a 16 fps framerate.
-    pause(0.0625);
-    
-    try
-        % Get the next frame.    
-        videoFrame = snapshot(cam);
-        %Display original video
-        axes(handles.axes1);
-        imshow(videoFrame);
-        %Detect eyes 
-        videoFrameEyeR = videoFrame;
-        videoFrameEyeL = videoFrame;
-        EyesBox = step(handles.EyeDetector, videoFrame);
-        %Separate the two eyes
-        videoRightEye = imcrop(videoFrameEyeR,EyesBox+[0,0,-EyesBox(3)*0.6,0]);
-        videoLeftEye = imcrop(videoFrameEyeL,EyesBox+[EyesBox(3)*0.6,0,-EyesBox(3)*0.5,0]);
-        %Display eyes on axes
-        axes(handles.axes2);
-        imshow(videoRightEye);
-        axes(handles.axes4);
-        imshow(videoLeftEye);
-    catch
-        axes(handles.axes1);
-        imshow(videoFrame);axes(handles.axes2);
+    while handles.loop
+        %Wait for a 16 fps framerate.
+        pause(0.0625);
+
+        try
+            % Get the next frame.    
+            videoFrame = snapshot(cam);
+            %Display original video
+            axes(handles.axes1);
+            imshow(videoFrame);
+            %Detect eyes 
+            videoFrameEyeR = videoFrame;
+            videoFrameEyeL = videoFrame;
+            EyesBox = step(handles.EyeDetector, videoFrame);
+            %check = size(EyesBox);
+            %if check(1) > 1 
+               %EyesBox = EyesBox(1,:);
+            %end
+            %Separate the two eyes
+            videoRightEye = imcrop(videoFrameEyeR,EyesBox+[0,0,-EyesBox(3)*0.5,0]);
+            videoLeftEye = imcrop(videoFrameEyeL,EyesBox+[EyesBox(3)*0.5,0,-EyesBox(3)*0.5,0]);
+            
+            axes(handles.axes2);
+            vRightEye=videoRightEye;
+            %sets the red value of lighter pixels to 255 
+            videoRightEye(find(videoRightEye(:,:,1)>20 & videoRightEye(:,:,2)>20 & videoRightEye(:,:,3)>20))=255;
+            %make data double precision
+            CFToolFrame=double(videoRightEye);
+            %extracts information on red
+            z=CFToolFrame(:,:,1);
+            %turns x and y into grid format
+            [x y]=ndgrid(1:size(z,1),1:size(z,2));
+            %turns x,y, and z into single column vectors so that the fit function
+            %can be used to plot the data
+            [x,y,z] = prepareSurfaceData(x,y,z);
+            %plots the data using cubic interpolation
+            sf=fit([x,y],z,'cubicinterp');
+            plot(sf,[x,y],z)
+            
+            axes(handles.axes4);
+            %finds the pixel with the lowest red value from the image, with
+            %the lighter pixels having been set to 255
+            m=min(min(videoRightEye(:,:,1)));
+            %finds the row and column at which that minimum occurs
+            z=videoRightEye(:,:,1);
+            [row,col]=find(z==m);
+            %inserts marker on the minimum (on the original image
+            vRightEye=insertMarker(vRightEye,[col(1),row(1)]);
+            %show image with the marker
+            imshow(vRightEye)
+            
+        catch
+            axes(handles.axes1);
+            imshow(videoFrame);
+        end
+        handles = guidata(hObject);  %Get the newest GUI data 
     end
-    handles = guidata(hObject);  %Get the newest GUI data 
+elseif isTextStop
+    hObject.String = 'Start';
+    handles.loop = false;
+    guidata(hObject, handles);
 end
-
-
-% --- Executes on button press in pushbutton2.
-function pushbutton2_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-handles.loop = false;
-guidata(hObject, handles); % Update handles structure
+end
