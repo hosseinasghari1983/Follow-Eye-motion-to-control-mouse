@@ -82,47 +82,91 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+isTextStart = strcmp(hObject.String,'Start');
+isTextStop = strcmp(hObject.String,'Stop');
+
+if isTextStart
+    hObject.String = 'Stop';
 % Create the webcam object.
-cam = webcam();
+    cam = webcam();
 
-% Capture one frame to get its size.
-videoFrame = snapshot(cam);
-frameSize = size(videoFrame);
-
-
-handles.loop = true; %Create stop_now in the handles structure
-guidata(hObject,handles);  %Update the GUI data
-
-
-while handles.loop
-    %Wait for a 16 fps framerate.
-    pause(0.0625);
-    % Get the next frame.    
+    % Capture one frame to get its size.
     videoFrame = snapshot(cam);
-    axes(handles.axes2);
-    imshow(videoFrame);
-    %Detect eyepair.
-    eyebox = step(handles.eyeDetector, videoFrame);
-    check = size(eyebox);
-    if check(1) > 1 
-        eyebox = eyebox(1,:);
-    end
-    if ~isempty(eyebox)
-        %crop left eye and display frame.
-        eyebox(3) = floor(eyebox(3)/2);
-        videoFrameRightEye = rgb2gray(imcrop(videoFrame,eyebox));
-        axes(handles.axes3);
-        imshow(videoFrameRightEye);
-        %crop right eye and display frame.
-        eyebox(1) = eyebox(1) + eyebox(3);
-        videoFrameLeftEye = rgb2gray(imcrop(videoFrame,eyebox));
-        axes(handles.axes1);
-        imshow(videoFrameLeftEye);
-    end
-    
-    
-    handles = guidata(hObject);  %Get the newest GUI data    
+    frameSize = size(videoFrame);
 
+
+    handles.loop = true; %Create stop_now in the handles structure
+    guidata(hObject,handles);  %Update the GUI data
+
+
+    while handles.loop
+        %Wait for a 16 fps framerate.
+        pause(0.0625);
+        % Get the next frame.    
+        videoFrame = snapshot(cam);
+        axes(handles.axes2);
+        imshow(videoFrame);
+        %Detect eyepair.
+        eyebox = step(handles.eyeDetector, videoFrame);
+        check = size(eyebox);
+        if check(1) > 1 
+            eyebox = eyebox(1,:);
+        end
+        if ~isempty(eyebox)
+            %crop left eye and display frame.
+            eyebox(3) = eyebox(3)/2;
+            %videoFrameRightEye = rgb2gray(imcrop(videoFrame,eyebox));
+            %brightCol = max(videoFrameRightEye);
+            %offset = 255 - brightCol; 
+            %videoFrameRightEye = videoFrameRightEye + offset;
+            %videoFrameRightEye(find(videoFrameRightEye>120)) = 255;
+            
+            %Adjustments to crop box
+            secCrop = eyebox;
+            space = 0.02*(secCrop(3) - secCrop(1));
+            secCrop(1) = secCrop(1) - 0.5*space;
+            secCrop(3) = secCrop(3) + 1.6*space;
+            videoFrameRightEye = rgb2gray(imcrop(videoFrame,secCrop)); 
+            darkCol = min(min(videoFrameRightEye));
+            videoFrameRightEye = videoFrameRightEye - darkCol;
+            %brightCol = max(videoFrameRightEye);
+            %offset = 255 - brightCol; 
+            %videoFrameRightEye = videoFrameRightEye + offset;
+            videoFrameRightEye(find(videoFrameRightEye>1)) = 255;
+            
+            axes(handles.axes3);
+            imshow(videoFrameRightEye);
+            %crop right eye and display frame.
+            eyebox(1) = eyebox(1) + eyebox(3);
+            
+            %Adjust crop box
+            secCrop = eyebox;
+            space = 0.02*(secCrop(3) - secCrop(1));
+            secCrop(1) = secCrop(1) - 1.6*space;
+            secCrop(3) = secCrop(3) + 0.5*space;            
+            
+            axes(handles.axes1);
+            %videoFrameLeftEye = rgb2gray(imcrop(videoFrame,eyebox));
+            videoFrameLeftEye = rgb2gray(imcrop(videoFrame,secCrop));
+            darkCol = min(min(videoFrameLeftEye));
+            videoFrameLeftEye = videoFrameLeftEye - darkCol;
+            %brightCol = max(videoFrameLeftEye);
+            %offset = 255 - brightCol; 
+            %videoFrameLeftEye = videoFrameLeftEye + offset;
+            videoFrameLeftEye(find(videoFrameLeftEye>2)) = 255;
+            imshow(videoFrameLeftEye);
+            %iDisplay = surf(videoFrameLeftEye);
+            %try
+            %    imshow(iDisplay);
+            %catch
+            %end
+        end    
+    handles = guidata(hObject);  %Get the newest GUI data   
+    end
+elseif isTextStop
+    hObject.String = 'Start';
+    handles.loop = false;
+    guidata(hObject, handles);
 end
 
 
