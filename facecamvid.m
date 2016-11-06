@@ -100,56 +100,68 @@ if isTextStart
         %Wait for a 16 fps framerate.
         pause(0.0625);
 
-        try
-            % Get the next frame.    
-            videoFrame = snapshot(cam);
-            %Display original video
-            axes(handles.axes1);
-            imshow(videoFrame);
-            %Detect eyes 
-            videoFrameEyeR = videoFrame;
-            videoFrameEyeL = videoFrame;
-            EyesBox = step(handles.EyeDetector, videoFrame);
-            %check = size(EyesBox);
-            %if check(1) > 1 
-               %EyesBox = EyesBox(1,:);
-            %end
+        
+        % Get the next frame.    
+        videoFrame = snapshot(cam);
+        %Display original video
+        axes(handles.axes1);
+        imshow(videoFrame);
+        %Detect eyes 
+        videoFrameEye = videoFrame;
+        EyesBox = step(handles.EyeDetector, videoFrame);
+        check = size(EyesBox);
+        if check(1) > 1 
+           EyesBox = EyesBox(2,:);
+        end
+        if ~isempty(EyesBox)
             %Separate the two eyes
-            videoRightEye = imcrop(videoFrameEyeR,EyesBox+[0,0,-EyesBox(3)*0.5,0]);
-            videoLeftEye = imcrop(videoFrameEyeL,EyesBox+[EyesBox(3)*0.5,0,-EyesBox(3)*0.5,0]);
+            EyesBox(3) = EyesBox(3)/2;
+            secCrop = EyesBox;
+            space = 0.02*(secCrop(3) - secCrop(1));
+            secCrop(1) = secCrop(1) - 0.5*space;
+            secCrop(3) = secCrop(3) + 1.6*space;
+            videoRightEye = imcrop(videoFrame,secCrop); 
+            
+            EyesBox(1) = EyesBox(1) + EyesBox(3);
+            %Adjust crop box
+            secCrop = EyesBox;
+            space = 0.02*(secCrop(3) - secCrop(1));
+            secCrop(1) = secCrop(1) - 1.6*space;
+            secCrop(3) = secCrop(3) + 0.5*space;
+            videoLeftEye = imcrop(videoFrame,secCrop);
+            %videoRightEye = imcrop(videoFrameEye,EyesBox+[0,0,-EyesBox(3)*0.5,0]);
+            %videoLeftEye = imcrop(videoFrameEye,EyesBox+[EyesBox(3)*0.5,0,-EyesBox(3)*0.5,0]);
             
             axes(handles.axes2);
             vRightEye=videoRightEye;
             %sets the red value of lighter pixels to 255 
-            videoRightEye(find(videoRightEye(:,:,1)>20 & videoRightEye(:,:,2)>20 & videoRightEye(:,:,3)>20))=255;
+            videoRightEye = rgb2gray(videoRightEye);
+            darkCol = min(min(videoRightEye));
+            videoRightEye = videoRightEye - darkCol;
+            videoRightEye(find(videoRightEye>12)) = 255;
+            %videoRightEye(find(videoRightEye(:,:,1)>35 & videoRightEye(:,:,2)>35 & videoRightEye(:,:,3)>35))=255;
+            
             %make data double precision
-            CFToolFrame=double(videoRightEye);
+            z=double(videoRightEye);
             %extracts information on red
-            z=CFToolFrame(:,:,1);
+            %z=CFToolFrame(:,:,1);
             %turns x and y into grid format
             [x y]=ndgrid(1:size(z,1),1:size(z,2));
             %turns x,y, and z into single column vectors so that the fit function
             %can be used to plot the data
-            [x,y,z] = prepareSurfaceData(x,y,z);
+            [x1,y1,z1] = prepareSurfaceData(x,y,z);
             %plots the data using cubic interpolation
-            sf=fit([x,y],z,'cubicinterp');
-            plot(sf,[x,y],z)
+            sf=fit([x1,y1],z1,'poly25');
+            z=sf(x,y);
+            surf(x,y,z);
             
             axes(handles.axes4);
-            %finds the pixel with the lowest red value from the image, with
-            %the lighter pixels having been set to 255
-            m=min(min(videoRightEye(:,:,1)));
-            %finds the row and column at which that minimum occurs
-            z=videoRightEye(:,:,1);
-            [row,col]=find(z==m);
+            [row,col]=find(z==min(min(z)));
             %inserts marker on the minimum (on the original image
-            vRightEye=insertMarker(vRightEye,[col(1),row(1)]);
+            vRightEye=insertMarker(vRightEye,[col,row]);
             %show image with the marker
-            imshow(vRightEye)
+            imshow(vRightEye);
             
-        catch
-            axes(handles.axes1);
-            imshow(videoFrame);
         end
         handles = guidata(hObject);  %Get the newest GUI data 
     end
