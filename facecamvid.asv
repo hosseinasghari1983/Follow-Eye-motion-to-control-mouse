@@ -167,13 +167,14 @@ if isTextStart
             norMarker(2) = row/cropSize(2);
             runAverage = runAverage + norMarker;  
             counter = counter + 1;
-            if counter == 3
+            if counter == 5
                 norMarker = runAverage/counter;
                 counter = 0;
                 runAverage = [0,0];
-                savedMarker = norMarker.*cropSize;
+                norMarker = norMarker.*cropSize;
+                savedMarker = norMarker;
                 %inserts marker on the minimum (on the original image)
-                vRightEye = insertMarker(vRightEye,savedMarker);
+                vRightEye = insertMarker(vRightEye,norMarker);
                 %show image with the marker
                 imshow(vRightEye);
             else
