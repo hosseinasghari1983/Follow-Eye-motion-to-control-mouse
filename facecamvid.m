@@ -99,71 +99,76 @@ if isTextStart
     while handles.loop
         %Wait for a 16 fps framerate.
         pause(0.0625);
+        for k=1:3
+            % Get the next frame.
+            videoFrame = snapshot(cam);
+            %Detect eyes 
+            EyesBox = step(handles.EyeDetector, videoFrame);
+            check = size(EyesBox);
+            if check(1) > 1 
+               EyesBox = EyesBox(2,:);
+            end
+            if ~isempty(EyesBox)
+                %Separate the two eyes
+                EyesBox(3) = EyesBox(3)/2;
+                secCrop = EyesBox;
+                space = 0.02*(secCrop(3) - secCrop(1));
+                secCrop(1) = secCrop(1) - 0.5*space;
+                secCrop(3) = secCrop(3) + 1.6*space;
+                videoRightEye = imcrop(videoFrame,secCrop); 
+                EyesBox(1) = EyesBox(1) + EyesBox(3);
+                %Adjust crop box
+                secCrop = EyesBox;
+                space = 0.02*(secCrop(3) - secCrop(1));
+                secCrop(1) = secCrop(1) - 1.6*space;
+                secCrop(3) = secCrop(3) + 0.5*space;
+                videoLeftEye = imcrop(videoFrame,secCrop);
 
-        
-        % Get the next frame.    
-        videoFrame = snapshot(cam);
-        %Display original video
-        axes(handles.axes1);
-        imshow(videoFrame);
-        %Detect eyes 
-        videoFrameEye = videoFrame;
-        EyesBox = step(handles.EyeDetector, videoFrame);
-        check = size(EyesBox);
-        if check(1) > 1 
-           EyesBox = EyesBox(2,:);
+                vRightEye=videoRightEye;
+                videoRightEye = rgb2gray(videoRightEye);
+
+                axes(handles.axes1);
+                cla(handles.axes1);
+                surf(videoRightEye);
+
+                axes(handles.axes2);
+                cla(handles.axes2);
+                %normalizes gray scale
+                darkCol = min(min(videoRightEye));
+                videoRightEye = videoRightEye - darkCol;
+                videoRightEye(find(videoRightEye>12)) = 255;
+                %make data double precision
+                z0=double(videoRightEye);
+                    if k==1
+                        z=z0;
+                    else
+                        z0=imresize(z0,size(z));
+                        z=(z+z0)/2;
+                    end
+                %turns x and y into grid format
+                [x y]=ndgrid(1:size(z,1),1:size(z,2));
+                %turns x,y, and z into single column vectors so that the fit function
+                %can be used to plot the data
+                [x1,y1,z1] = prepareSurfaceData(x,y,z);
+                %plots the data using curve fitting
+                sf=fit([x1,y1],z1,'poly25');
+                z=sf(x,y);
+                %sets the corners to 255
+                z(find(x<0.2*size(x,1) | y<0.4*size(y,1)| x>0.8*size(x,1) | y>0.8*size(y,2)))=255;
+                surf(x,y,z);
+
+                axes(handles.axes4);
+                [row,col]=find(z==min(min(z)));
+                %inserts marker on the minimum (on the original image
+                vRightEye=insertMarker(vRightEye,[col,row]);
+                %show image with the marker
+                cla(handles.axes4);
+                %make empty instead
+                imshow(vRightEye);
+                k=k-1;
+                handles = guidata(hObject);  %Get the newest GUI data         
+            end
         end
-        if ~isempty(EyesBox)
-            %Separate the two eyes
-            EyesBox(3) = EyesBox(3)/2;
-            secCrop = EyesBox;
-            space = 0.02*(secCrop(3) - secCrop(1));
-            secCrop(1) = secCrop(1) - 0.5*space;
-            secCrop(3) = secCrop(3) + 1.6*space;
-            videoRightEye = imcrop(videoFrame,secCrop); 
-            
-            EyesBox(1) = EyesBox(1) + EyesBox(3);
-            %Adjust crop box
-            secCrop = EyesBox;
-            space = 0.02*(secCrop(3) - secCrop(1));
-            secCrop(1) = secCrop(1) - 1.6*space;
-            secCrop(3) = secCrop(3) + 0.5*space;
-            videoLeftEye = imcrop(videoFrame,secCrop);
-            %videoRightEye = imcrop(videoFrameEye,EyesBox+[0,0,-EyesBox(3)*0.5,0]);
-            %videoLeftEye = imcrop(videoFrameEye,EyesBox+[EyesBox(3)*0.5,0,-EyesBox(3)*0.5,0]);
-            
-            axes(handles.axes2);
-            vRightEye=videoRightEye;
-            %sets the red value of lighter pixels to 255 
-            videoRightEye = rgb2gray(videoRightEye);
-            darkCol = min(min(videoRightEye));
-            videoRightEye = videoRightEye - darkCol;
-            videoRightEye(find(videoRightEye>12)) = 255;
-            %videoRightEye(find(videoRightEye(:,:,1)>35 & videoRightEye(:,:,2)>35 & videoRightEye(:,:,3)>35))=255;
-            
-            %make data double precision
-            z=double(videoRightEye);
-            %extracts information on red
-            %z=CFToolFrame(:,:,1);
-            %turns x and y into grid format
-            [x y]=ndgrid(1:size(z,1),1:size(z,2));
-            %turns x,y, and z into single column vectors so that the fit function
-            %can be used to plot the data
-            [x1,y1,z1] = prepareSurfaceData(x,y,z);
-            %plots the data using cubic interpolation
-            sf=fit([x1,y1],z1,'poly25');
-            z=sf(x,y);
-            surf(x,y,z);
-            
-            axes(handles.axes4);
-            [row,col]=find(z==min(min(z)));
-            %inserts marker on the minimum (on the original image
-            vRightEye=insertMarker(vRightEye,[col,row]);
-            %show image with the marker
-            imshow(vRightEye);
-            
-        end
-        handles = guidata(hObject);  %Get the newest GUI data 
     end
 elseif isTextStop
     hObject.String = 'Start';
