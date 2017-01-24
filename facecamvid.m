@@ -22,7 +22,7 @@ function varargout = facecamvid(varargin)
 
 % Edit the above text to modify the response to help facecamvid
 
-% Last Modified by GUIDE v2.5 15-Oct-2016 11:53:05
+% Last Modified by GUIDE v2.5 24-Jan-2017 08:16:51
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -92,100 +92,112 @@ isTextStop = strcmp(hObject.String,'Stop');
 if isTextStart
     hObject.String = 'Stop';
     cam = webcam();
-    runAverage = [0,0];
-    counter = 0;
-    savedMarker = [0,0];
     handles.loop = true; %Create stop_now in the handles structure
     guidata(hObject,handles);  %Update the GUI data
-    
+    marker = false;
 
 
     while handles.loop
         %Wait for a 16 fps framerate.
         pause(0.0625);
+        for k=1:3
+            % Get the next frame.
+            videoFrame = snapshot(cam);
+            %Detect eyes 
+            EyesBox = step(handles.EyeDetector, videoFrame);
+            check = size(EyesBox);
+            if check(1) > 1 
+               EyesBox = EyesBox(2,:);
+            end
+            if ~isempty(EyesBox)
+                %Separate the two eyes
+                EyesBox(3) = EyesBox(3)/2;
+                secCrop = EyesBox;
+                space = 0.02*(secCrop(3) - secCrop(1));
+                secCrop(1) = secCrop(1) - 0.5*space;
+                secCrop(3) = secCrop(3) + 1.6*space;
+                videoRightEye = imcrop(videoFrame,secCrop); 
+                EyesBox(1) = EyesBox(1) + EyesBox(3);
+                %Adjust crop box
+                secCrop = EyesBox;
+                space = 0.02*(secCrop(3) - secCrop(1));
+                secCrop(1) = secCrop(1) - 1.6*space;
+                secCrop(3) = secCrop(3) + 0.5*space;
+                videoLeftEye = imcrop(videoFrame,secCrop);
 
-        
-        % Get the next frame.    
-        videoFrame = snapshot(cam);
-        %Display original video
-        axes(handles.axes1);
-        imshow(videoFrame);
-        %Detect eyes 
-        videoFrameEye = videoFrame;
-        EyesBox = step(handles.EyeDetector, videoFrame);
-        check = size(EyesBox);
-        if check(1) > 1 
-           EyesBox = EyesBox(2,:);
-        end
-        if ~isempty(EyesBox)
-            %Separate the two eyes
-            EyesBox(3) = EyesBox(3)/2;
-            secCrop = EyesBox;
-            space = 0.02*(secCrop(3) - secCrop(1));
-            secCrop(1) = secCrop(1) - 0.5*space;
-            secCrop(3) = secCrop(3) + 1.6*space;
-            videoRightEye = imcrop(videoFrame,secCrop); 
-            
-            EyesBox(1) = EyesBox(1) + EyesBox(3);
-            %Adjust crop box
-            secCrop = EyesBox;
-            space = 0.02*(secCrop(3) - secCrop(1));
-            secCrop(1) = secCrop(1) - 1.6*space;
-            secCrop(3) = secCrop(3) + 0.5*space;
-            videoLeftEye = imcrop(videoFrame,secCrop);
-            %videoRightEye = imcrop(videoFrameEye,EyesBox+[0,0,-EyesBox(3)*0.5,0]);
-            %videoLeftEye = imcrop(videoFrameEye,EyesBox+[EyesBox(3)*0.5,0,-EyesBox(3)*0.5,0]);
-            
-            axes(handles.axes2);
-            vRightEye=videoRightEye;
-            %sets the value of lighter pixels to 255 
-            videoRightEye = rgb2gray(videoRightEye);
-            darkCol = min(min(videoRightEye));
-            videoRightEye = videoRightEye - darkCol;
-            videoRightEye(find(videoRightEye>12)) = 255;
-            %videoRightEye(find(videoRightEye(:,:,1)>35 & videoRightEye(:,:,2)>35 & videoRightEye(:,:,3)>35))=255;
-            
-            %make data double precision
-            z=double(videoRightEye);
-            %extracts information on red
-            %z=CFToolFrame(:,:,1);
-            %turns x and y into grid format
-            [x y]=ndgrid(1:size(z,1),1:size(z,2));
-            %turns x,y, and z into single column vectors so that the fit function
-            %can be used to plot the data
-            [x1,y1,z1] = prepareSurfaceData(x,y,z);
-            %plots the data using cubic interpolation
-            sf=fit([x1,y1],z1,'poly25');
-            z=sf(x,y);
-            surf(x,y,z);
-            
-            axes(handles.axes4);
-            [row,col]=find(z==min(min(z)));
-            %normalize pixel number
-            cropSize = size(videoRightEye);
-            norMarker(1) = col/cropSize(1);
-            norMarker(2) = row/cropSize(2);
-            runAverage = runAverage + norMarker;  
-            counter = counter + 1;
-            if counter == 3
-                norMarker = runAverage/counter;
-                counter = 0;
-                runAverage = [0,0];
-                savedMarker = norMarker.*cropSize;
-                %inserts marker on the minimum (on the original image)
-                vRightEye = insertMarker(vRightEye,savedMarker);
-                %show image with the marker
+                vRightEye=videoRightEye;
+                videoRightEye = rgb2gray(videoRightEye);
+
+                axes(handles.axes1);
+                cla(handles.axes1);
+                surf(videoRightEye);
+
+                %normalizes gray scale
+                darkCol = min(min(videoRightEye));
+                videoRightEye = videoRightEye - darkCol;
+                videoRightEye(find(videoRightEye>12)) = 255;
+                %make data double precision
+                z0=double(videoRightEye);
+                    if k==1
+                        z=z0;
+                    else
+                        z0=imresize(z0,size(z));
+                        z=(z+z0)/2;
+                        if k==3
+                            [x y]=ndgrid(1:size(z,1),1:size(z,2));
+                            %turns x,y, and z into single column vectors so that the fit function
+                            %can be used to plot the data
+                            [x1,y1,z1] = prepareSurfaceData(x,y,z);
+                            %plots the data using curve fitting
+                            sf=fit([x1,y1],z1,'poly25');
+                            z=sf(x,y);
+                            %sets the corners to 255
+                            z(find(x<0.2*size(x,1) | y<0.4*size(y,1)| x>0.8*size(x,1) | y>0.8*size(y,2)))=255;
+                            axes(handles.axes2);
+                            cla(handles.axes2);
+                            surf(x,y,z);
+
+                            [row,col]=find(z==min(min(z)));
+                            marker = true;
+                            
+                            %inserts marker on the minimum (on the original image
+                            %vRightEye=insertMarker(vRightEye,[col,row]);
+
+                            cFrameSize = size(vRightEye);
+                            height = cFrameSize(1);
+                            width = cFrameSize(2);
+                            normalWidth = 2000;
+                            normalHeight = 2000;
+                            wRatio = normalWidth/width;
+                            hRatio = normalHeight/height;
+                            normalCol = wRatio*col;
+                            normalRow = hRatio*row;
+                            pos = [normalCol, normalRow]
+                        end
+                    end
+                
+                axes(handles.axes4);
+                cla(handles.axes4);
+                if marker
+                vRightEye=insertMarker(vRightEye,[col,row]);
+                end
                 imshow(vRightEye);
-            else
-                vRightEye = insertMarker(vRightEye,savedMarker);
-                imshow(vRightEye);
-            end        
+                handles = guidata(hObject);  %Get the newest GUI data         
+            end
         end
-        handles = guidata(hObject);  %Get the newest GUI data 
     end
 elseif isTextStop
     hObject.String = 'Start';
     handles.loop = false;
     guidata(hObject, handles);
 end
+end
+
+
+% --- Executes on button press in pushbutton5.
+function pushbutton5_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.gather = true; 
 end
