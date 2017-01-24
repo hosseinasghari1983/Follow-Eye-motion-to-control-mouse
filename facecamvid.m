@@ -56,6 +56,9 @@ function facecamvid_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.EyeDetector = vision.CascadeObjectDetector('EyePairBig');
 handles.loop = false;
 
+% Set up data gathering condition
+handles.gather = false;
+
 % Choose default command line output for facecamvid
 handles.output = hObject;
 
@@ -95,7 +98,9 @@ if isTextStart
     handles.loop = true; %Create stop_now in the handles structure
     guidata(hObject,handles);  %Update the GUI data
     marker = false;
-
+    j = 0;
+    aCol = [];
+    aRow = [];
 
     while handles.loop
         %Wait for a 16 fps framerate.
@@ -162,27 +167,43 @@ if isTextStart
                             
                             %inserts marker on the minimum (on the original image
                             %vRightEye=insertMarker(vRightEye,[col,row]);
-
-                            cFrameSize = size(vRightEye);
-                            height = cFrameSize(1);
-                            width = cFrameSize(2);
-                            normalWidth = 2000;
-                            normalHeight = 2000;
-                            wRatio = normalWidth/width;
-                            hRatio = normalHeight/height;
-                            normalCol = wRatio*col;
-                            normalRow = hRatio*row;
-                            pos = [normalCol, normalRow]
+                            
                         end
                     end
                 
                 axes(handles.axes4);
                 cla(handles.axes4);
                 if marker
-                vRightEye=insertMarker(vRightEye,[col,row]);
+                    vRightEye=insertMarker(vRightEye,[col,row]);
                 end
                 imshow(vRightEye);
-                handles = guidata(hObject);  %Get the newest GUI data         
+                handles = guidata(hObject);  %Get the newest GUI data 
+                
+                if handles.gather           
+                    cFrameSize = size(vRightEye);
+                    height = cFrameSize(1);
+                    width = cFrameSize(2);
+                    normalWidth = 2000;
+                    normalHeight = 2000;
+                    wRatio = normalWidth/width;
+                    hRatio = normalHeight/height;
+                    normalCol = wRatio*col;
+                    normalRow = hRatio*row;
+                    aCol = [aCol, normalCol];
+                    aRow = [aRow, normalRow];
+                    j = j + 1;
+                end
+                if  j==10
+                    handles.gather = false;
+                    j = 0;
+                    guidata(hObject, handles);
+                    averageCol = mean(aCol)
+                    maxCol = max(aCol)
+                    minCol = min(aCol)
+                    averageRow = mean(aRow)
+                    maxRow = max(aRow)
+                    minRow = min(aRow)
+                end
             end
         end
     end
@@ -200,4 +221,5 @@ function pushbutton5_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.gather = true; 
+guidata(hObject, handles); %Get the newest GUI data   
 end
