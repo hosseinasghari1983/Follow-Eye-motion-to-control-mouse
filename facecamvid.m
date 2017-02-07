@@ -101,6 +101,12 @@ if isTextStart
     j = 0;
     aCol = [];
     aRow = [];
+    mCol = [];
+    mRow = [];
+    import java.awt.Robot;
+    import java.awt.event.*;
+    robot=Robot ();
+    screenSize = [1920,1080];
 
     while handles.loop
         %Wait for a 16 fps framerate.
@@ -143,67 +149,85 @@ if isTextStart
                 videoRightEye(find(videoRightEye>12)) = 255;
                 %make data double precision
                 z0=double(videoRightEye);
-                    if k==1
-                        z=z0;
-                    else
-                        z0=imresize(z0,size(z));
-                        z=(z+z0)/2;
-                        if k==3
-                            [x y]=ndgrid(1:size(z,1),1:size(z,2));
-                            %turns x,y, and z into single column vectors so that the fit function
-                            %can be used to plot the data
-                            [x1,y1,z1] = prepareSurfaceData(x,y,z);
-                            %plots the data using curve fitting
-                            sf=fit([x1,y1],z1,'poly25');
-                            z=sf(x,y);
-                            %sets the corners to 255
-                            z(find(x<0.2*size(x,1) | y<0.4*size(y,1)| x>0.8*size(x,1) | y>0.8*size(y,2)))=255;
+                if k==1
+                    z=z0;
+                else
+                    z0=imresize(z0,size(z));
+                    z=(z+z0)/2;
+                    if k==3
+                        [x y]=ndgrid(1:size(z,1),1:size(z,2));
+                        %turns x,y, and z into single column vectors so that the fit function
+                        %can be used to plot the data
+                        [x1,y1,z1] = prepareSurfaceData(x,y,z);
+                        %plots the data using curve fitting
+                        sf=fit([x1,y1],z1,'poly25');
+                        z=sf(x,y);
+                        %sets the corners to 255
+                        z(find(x<0.2*size(x,1) | y<0.4*size(y,1)| x>0.8*size(x,1) | y>0.8*size(y,2)))=255;
+                        axes(handles.axes4);
+                        cla(handles.axes4);
+                        surf(x,y,z);
+
+                        [row,col]=find(z==min(min(z)));
+                        marker = true;
+                       
+                        %When gather data button is pressed, find position data
+                        %normalized to 100pxs regardless of image resolution.
+                        if handles.gather           
+                            cFrameSize = size(vRightEye);
+                            height = cFrameSize(1);
+                            width = cFrameSize(2);
+                            normalWidth = 1920;
+                            normalHeight = 1080;
+                            wRatio = normalWidth/width;
+                            hRatio = normalHeight/height;
+                            normalCol = wRatio*col;
+                            normalRow = hRatio*row;
+                            
+                            %Mouse robot test
+                            newCol = 1920 - floor(normalCol)
+                            robot.mouseMove(newCol,floor(normalRow));
+                            %mouse robot test
+                            aCol = [aCol, normalCol];
+                            aRow = [aRow, normalRow];
+                            %insert marker cluster
+                            for d=1:length(aCol)
+                                mCol = aCol./wRatio;
+                                mRow = aRow./hRatio;
+                                vRightEye=insertMarker(vRightEye,[mCol(d),mRow(d)],'size',1);
+                            end
                             axes(handles.axes2);
                             cla(handles.axes2);
-                            surf(x,y,z);
-
-                            [row,col]=find(z==min(min(z)));
-                            marker = true;
-                            
-                            %inserts marker on the minimum (on the original image
-                            %vRightEye=insertMarker(vRightEye,[col,row]);
-                            
+                            imshow(vRightEye);
+                            handles = guidata(hObject);
+                            j = j + 1;
+                        end
+                %Once enough markers are found, output average position
+                %data with mins and max.
+                        if  j==20
+                            handles.gather = false;
+                            j = 0;
+                            averageCol = mean(aCol)  %Column for X coordinate
+                            maxCol = max(aCol)
+                            minCol = min(aCol)
+                            averageRow = mean(aRow) %Row for Y coordinate
+                            maxRow = max(aRow)
+                            minRow = min(aRow)
+                            hObject.String = 'Start';
+                            handles.loop = false;
+                            guidata(hObject, handles);
                         end
                     end
+                end
                 
-                axes(handles.axes4);
-                cla(handles.axes4);
-                if marker
-                    vRightEye=insertMarker(vRightEye,[col,row]);
-                end
-                imshow(vRightEye);
-                handles = guidata(hObject);  %Get the newest GUI data 
+               % axes(handles.axes4);
+               % cla(handles.axes4);
+               % if marker
+               %     vRightEye=insertMarker(vRightEye,[col,row]);
+               % end
+               % imshow(vRightEye);
+               handles = guidata(hObject);  %Get the newest GUI data 
                 
-                if handles.gather           
-                    cFrameSize = size(vRightEye);
-                    height = cFrameSize(1);
-                    width = cFrameSize(2);
-                    normalWidth = 2000;
-                    normalHeight = 2000;
-                    wRatio = normalWidth/width;
-                    hRatio = normalHeight/height;
-                    normalCol = wRatio*col;
-                    normalRow = hRatio*row;
-                    aCol = [aCol, normalCol];
-                    aRow = [aRow, normalRow];
-                    j = j + 1;
-                end
-                if  j==10
-                    handles.gather = false;
-                    j = 0;
-                    guidata(hObject, handles);
-                    averageCol = mean(aCol)
-                    maxCol = max(aCol)
-                    minCol = min(aCol)
-                    averageRow = mean(aRow)
-                    maxRow = max(aRow)
-                    minRow = min(aRow)
-                end
             end
         end
     end
