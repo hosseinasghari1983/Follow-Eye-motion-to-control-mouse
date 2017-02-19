@@ -121,10 +121,9 @@ if isTextStart
     if check(1) > 1
         EyesFrame = EyesFrame(2,:);
     end
-    
     while handles.loop
-        pause(0.5)
         tic;
+        pause(0.5)
         for k=1:3
             videoFrame = rgb2gray((snapshot(cam)));
             cVFrame = imcrop(videoFrame, Face(1,:));
