@@ -124,6 +124,7 @@ if isTextStart
     
     while handles.loop
         pause(0.5)
+        tic;
         for k=1:3
             videoFrame = rgb2gray((snapshot(cam)));
             cVFrame = imcrop(videoFrame, Face(1,:));
@@ -299,6 +300,8 @@ if isTextStart
                     end
                 end
             end
+            a=toc;
+            set(handles.text5, 'String', num2str(1/a));
             handles = guidata(hObject);  %Get the newest GUI data
             %             catch
             %             end
