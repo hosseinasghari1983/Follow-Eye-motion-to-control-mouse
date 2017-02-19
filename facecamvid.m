@@ -113,17 +113,14 @@ if isTextStart
     screenSize = [1920,1080];
     
     while handles.loop
-        %Wait for a 16 fps framerate.
         pause(0.5)
         for k=1:3
-            %             try
             % Get the next frame.
-            %videoFrame = rgb2gray(imcrop(snapshot(cam),[550 100 400 600]));
             videoFrame = rgb2gray((snapshot(cam)));
-            % figure; mesh(videoFrame*1)
-            %Detect eyes
+            %Detect face
             Face = step(handles.FaceDetector, videoFrame);
             Face = imcrop(videoFrame, Face(1,:));
+            %Detect eyes
             EyesBox = step(handles.EyeDetector, Face);
             check = size(EyesBox);
             if check(1) > 1
@@ -134,36 +131,35 @@ if isTextStart
                 EyesBox1=EyesBox;
                 EyesBox1(3) = EyesBox1(3)/2;
                 secCrop = EyesBox1;
-                space = (secCrop(3));% - secCrop(1));
+                space = (secCrop(3));
                 secCrop(1) = secCrop(1) + 0.15 * space;
                 secCrop(3) = secCrop(3) - 0.5 * space;
                 secCrop(2)= secCrop(2) + 0.25 * secCrop(4);
                 secCrop(4) = secCrop(4) * 0.4;
-                %                 secCrop(1)
                 videoRightEye = imcrop(Face,secCrop);
-                %                 EyesBox(1) = EyesBox(1) + EyesBox(3);
-                %Adjust crop box
-                secCrop = EyesBox;
-                secCrop(3) = secCrop(3)/2;
-                secCrop(1) = secCrop(1) + space+0.3*space;
-                secCrop(3) = secCrop(3) - 0.5 *space;
-                secCrop(2)=secCrop(2)+ 0.25*secCrop(4);
-                secCrop(4) = secCrop(4) *0.4;
-                videoLeftEye = imcrop(Face,secCrop);
-                figure(11); subplot(2,1,1); imagesc(fliplr(videoRightEye)); subplot(2,1,2); imagesc(fliplr(videoLeftEye)); colormap gray
+                %Crop left eye
+%                 secCrop = EyesBox;
+%                 secCrop(3) = secCrop(3)/2;
+%                 secCrop(1) = secCrop(1) + space+0.3*space;
+%                 secCrop(3) = secCrop(3) - 0.5 *space;
+%                 secCrop(2)=secCrop(2)+ 0.25*secCrop(4);
+%                 secCrop(4) = secCrop(4) *0.4;
+%                 videoLeftEye = imcrop(Face,secCrop);
+%                 figure(11); subplot(2,1,1); imagesc(fliplr(videoRightEye)); subplot(2,1,2); imagesc(fliplr(videoLeftEye)); colormap gray
+                %Interpolation, image resize      
+                imClass = class(videoRightEye);
+                [x y] = meshgrid(1:size(videoRightEye,2), 1:size(videoRightEye,1));
+                [xi yi] = meshgrid(1:0.1:size(videoRightEye,2), 1:0.1:size(videoRightEye,1));
+                imClass
+                videoRightEye = cast(interp2(x,y,double(videoRightEye),xi,yi,'linear'),imClass);
                 vRightEye=videoRightEye;
-                %                 videoRightEye = (videoRightEye);
-                
-                %                 axes(handles.axes1);
-                %                 cla(handles.axes1);
-                %                 surf(videoRightEye);
-                
                 %normalizes gray scale
                 darkCol = min(min(videoRightEye));
                 videoRightEye = videoRightEye - darkCol;
                 videoRightEye(find(videoRightEye>12)) = 255;
                 %make data double precision
                 z0 = double(videoRightEye);
+                %average three frames
                 if k==1
                     z=z0;
                 else
@@ -179,10 +175,7 @@ if isTextStart
                         z=sf(x,y);
                         %sets the corners to 255
                         z(find(x<0.2*size(x,1) | y<0.4*size(y,1)| x>0.8*size(x,1) | y>0.8*size(y,2)))=255;
-                        %                         axes(handles.axes4);
-                        %                         cla(handles.axes4);
-                        %                         surf(x,y,z);
-                        
+                        %find minimum of the curve
                         [row,col]=find(z==min(min(z)));
                         marker = true;
                         
@@ -201,8 +194,7 @@ if isTextStart
                             
                             %Mouse robot test
                             newCol = 1920 - floor(normalCol)
-                            %                             robot.mouseMove(newCol,floor(normalRow));
-                            %mouse robot test
+                            %robot.mouseMove(newCol,floor(normalRow));
                             aCol = [aCol, normalCol];
                             aRow = [aRow, normalRow];
                             %insert marker cluster
@@ -210,22 +202,17 @@ if isTextStart
                                 mCol = round(aCol./wRatio);
                                 mRow = round(aRow./hRatio);
                                 try
-                                    vRightEye(mRow(d),mCol(d))=255;% =insertMarker(vRightEye,[mCol(d),mRow(d)],'square','size',1);
+                                    vRightEye(mRow(d),mCol(d))=255;
                                 catch
                                 end
                             end
                             axes(handles.axes2);
                             cla(handles.axes2);
-                            
-                            %Interpolation, image resize      
-                            %imClass = class(vRightEye);
-                            %[x y] = meshgrid(1:width, 1:height);
-                            %[xi yi] = meshgrid(1:0.1:width, 1:0.1:height);
-                            %imClass
-                            %inRightEye = cast(interp2(x,y,double(vRightEye),xi,yi,'linear'),imClass);
-                            
+                            %display image on axes 2
                             imagesc(fliplr(vRightEye)); colormap gray
-                            yLinePos = round(2*height/3);
+                            %make grid tile red if marker is in grid four times
+                            %or more
+                            yLinePos = round(1*height/2);
                             xLinePos = round(3*width/5);
                             if mCol(d)>(2*xLinePos/3)
                                 if mRow(d)<yLinePos
@@ -279,13 +266,12 @@ if isTextStart
                                     end
                                 end
                             end
-                            
-
+                            %Insert grid lines
                             xL = get(gca,'XLim');
-                            line(xL,[round(2*height/3) round(2*height/3)],'Color','r');
+                            line(xL,[round(1*height/2) round(1*height/2)],'Color','r');
                             yL = get(gca,'YLim');
                             line([round(3*width/5) round(3*width/5)],yL,'Color','r');
-                            %Sample Grid
+                            %uniform grid
                             grid on;
                             handles.axes2.GridColor = 'w';
                             handles = guidata(hObject);
@@ -308,13 +294,6 @@ if isTextStart
                         end
                     end
                 end
-                
-                % axes(handles.axes4);
-                % cla(handles.axes4);
-                % if marker
-                %     vRightEye=insertMarker(vRightEye,[col,row]);
-                % end
-                % imshow(vRightEye);
                 handles = guidata(hObject);  %Get the newest GUI data
                 
             end
