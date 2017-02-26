@@ -315,7 +315,22 @@ if isTextStart
                                 patch(xP, yP, 'r');                     
                             end
                         end
-
+                       
+                        if (mCol(d)<(xLinePos2))&&(mRow(d)>=yLinePos2&&(mRow(d)<=yLinePos1))
+                            Counter = sevenCounter + 1;
+                            eightCounter=0;
+                            fourCounter = 0;
+                            fiveCounter = 0;
+                            sixCounter = 0;
+                            twoCounter = 0;
+                            threeCounter = 0;
+                            oneCounter = 0;
+                            if sevenCounter >= 4
+                                xP = [xLinePos1 (width+1) (width+1) xLinePos1];
+                                yP = [yLinePos2 yLinePos2 yLinePos1 yLinePos1];
+                                patch(xP, yP, 'r');
+                            end
+                        end
 
                         xL1 = get(gca,'XLim');
                         line(xL1,[round(2*height/5) round(2*height/5)],'Color','r');
