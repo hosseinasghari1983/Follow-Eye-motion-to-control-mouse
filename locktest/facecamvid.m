@@ -103,6 +103,10 @@ if isTextStart
     twoCounter = 0;
     threeCounter = 0;
     fourCounter = 0;
+    fiveCounter = 0;
+    sixCounter = 0;
+    sevenCounter = 0;
+    eightCounter = 0;
     aCol = [];
     aRow = [];
     mCol = [];
@@ -197,7 +201,7 @@ if isTextStart
                         normalRow = hRatio*row;
 
                         %Mouse robot test
-                        newCol = 1920 - floor(normalCol)
+                        newCol = 1920 - floor(normalCol);
                         %robot.mouseMove(newCol,floor(normalRow));
                         aCol = [aCol, normalCol];
                         aRow = [aRow, normalRow];
@@ -226,6 +230,10 @@ if isTextStart
                             twoCounter = 0;
                             threeCounter = 0;
                             fourCounter = 0;
+                            fiveCounter = 0;
+                            sixCounter = 0;
+                            sevenCounter = 0;
+                            eightCounter = 0;
                             if oneCounter >= 4
                                 xP = [0 xLinePos2 xLinePos2 0];
                                 yP = [0 0 yLinePos2 yLinePos2];
@@ -237,6 +245,10 @@ if isTextStart
                             oneCounter = 0;
                             threeCounter = 0;
                             fourCounter = 0;
+                            fiveCounter = 0;
+                            sixCounter = 0;
+                            sevenCounter = 0;
+                            eightCounter = 0;
                             if twoCounter >= 4
                                 xP = [xLinePos1 (width+1) (width+1) xLinePos1];
                                 yP = [0 0 yLinePos2 yLinePos2];
@@ -248,6 +260,10 @@ if isTextStart
                             twoCounter = 0;
                             oneCounter = 0;
                             fourCounter = 0;
+                            fiveCounter = 0;
+                            sixCounter = 0;
+                            sevenCounter = 0;
+                            eightCounter = 0;
                             if threeCounter >= 4
                                 xP = [xLinePos1 (width+1) (width+1) xLinePos1];
                                 yP = [yLinePos1 yLinePos1 (height+1) (height+1)];
@@ -259,10 +275,44 @@ if isTextStart
                             twoCounter = 0;
                             threeCounter = 0;
                             oneCounter = 0;
+                            fiveCounter = 0;
+                            sixCounter = 0;
+                            sevenCounter = 0;
+                            eightCounter = 0;
                             if fourCounter >= 4
                                 xP = [0 xLinePos2 xLinePos2 0];
                                 yP = [yLinePos1 yLinePos1 (height+1) (height+1)];
                                 patch(xP, yP, 'r');
+                            end
+                        end
+                        if (mCol(d)<=xLinePos1)&&(mCol(d)>xLinePos2)&&(mRow(d)<yLinePos2)
+                            sixCounter = sixCounter + 1;
+                            twoCounter = 0;
+                            threeCounter = 0;
+                            fourCounter = 0;
+                            fiveCounter = 0;
+                            oneCounter = 0;
+                            sevenCounter = 0;
+                            eightCounter = 0;
+                            if sixCounter >= 4
+                                xP = [xLinePos2 xLinePos1 xLinePos1 xLinePos2];
+                                yP = [0 0 yLinePos2 yLinePos2];
+                                patch(xP, yP, 'r');                     
+                            end
+                        end
+                        if (mCol(d)<=xLinePos1)&&(mCol(d)>xLinePos2)&&(mRow(d)>=yLinePos1)
+                            eightCounter = eightCounter + 1;
+                            twoCounter = 0;
+                            threeCounter = 0;
+                            fourCounter = 0;
+                            fiveCounter = 0;
+                            sixCounter = 0;
+                            sevenCounter = 0;
+                            oneCounter = 0;
+                            if eightCounter >= 4
+                                xP = [xLinePos2 xLinePos1 xLinePos1 xLinePos2];
+                                yP = [yLinePos1 yLinePos1 (height+1) (height+1)];
+                                patch(xP, yP, 'r');                     
                             end
                         end
 
