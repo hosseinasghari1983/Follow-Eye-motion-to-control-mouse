@@ -121,6 +121,7 @@ if isTextStart
     if check(1) > 1
         EyesFrame = EyesFrame(2,:);
     end
+    
     while handles.loop
         tic;
         pause(0.5)
@@ -153,7 +154,7 @@ if isTextStart
             imClass = class(videoRightEye);
             [x y] = meshgrid(1:size(videoRightEye,2), 1:size(videoRightEye,1));
             [xi yi] = meshgrid(1:0.1:size(videoRightEye,2), 1:0.1:size(videoRightEye,1));
-            imClass
+            imClass;
             videoRightEye = cast(interp2(x,y,double(videoRightEye),xi,yi,'linear'),imClass);
             vRightEye = videoRightEye;
             %normalizes gray scale
@@ -213,69 +214,65 @@ if isTextStart
                         cla(handles.axes2);
                         %display image on axes 2
                         imagesc(fliplr(vRightEye)); colormap gray
-                        yLinePos = round(height/2);
-                        xLinePos = round(width/2);
+                        yLinePos1 = round(3*height/5);
+                        yLinePos2 = round(2*height/5);
+                        xLinePos1 = round(3*width/5);
+                        xLinePos2 = round(2*width/5);
                         %xLine needs to have a coeff such that XLine width coeff + XLine coeff = 1
                         %if xLinePos = round(3*width/5), then mCol(d)>(2*xLinePos/3), 2*xLinePos/3 = 2*width/5
                         %2*width/5 + 3*width/5 = width
-                        if mCol(d)>(xLinePos) 
-                            if mRow(d)<yLinePos 
-                                oneCounter = oneCounter + 1;
-                                twoCounter = 0;
-                                threeCounter = 0;
-                                fourCounter = 0;
-                                if oneCounter >= 4
-                                    xP = [0 xLinePos xLinePos 0];
-                                    yP = [0 0 yLinePos yLinePos];
-                                    patch(xP, yP, 'r');
-                                end
+                        if (mCol(d)>(xLinePos1))&&(mRow(d)<yLinePos2)
+                            oneCounter = oneCounter + 1;
+                            twoCounter = 0;
+                            threeCounter = 0;
+                            fourCounter = 0;
+                            if oneCounter >= 4
+                                xP = [0 xLinePos2 xLinePos2 0];
+                                yP = [0 0 yLinePos2 yLinePos2];
+                                patch(xP, yP, 'r');                     
                             end
                         end
-                        if mCol(d)<=(xLinePos) 
-                            if mRow(d)<yLinePos
-                                twoCounter = twoCounter + 1;
-                                oneCounter = 0;
-                                threeCounter = 0;
-                                fourCounter = 0;
-                                if twoCounter >= 4
-                                    xP = [xLinePos (width+1) (width+1) xLinePos];
-                                    yP = [0 0 yLinePos yLinePos];
-                                    patch(xP, yP, 'r');
-                                end
+                        if (mCol(d)<=(xLinePos2))&&(mRow(d)<yLinePos2) 
+                            twoCounter = twoCounter + 1;
+                            oneCounter = 0;
+                            threeCounter = 0;
+                            fourCounter = 0;
+                            if twoCounter >= 4
+                                xP = [xLinePos1 (width+1) (width+1) xLinePos1];
+                                yP = [0 0 yLinePos2 yLinePos2];
+                                patch(xP, yP, 'r');
                             end
                         end
-                        if mCol(d)<=(xLinePos)
-                            if mRow(d)>=yLinePos
-                                threeCounter = threeCounter + 1;
-                                twoCounter = 0;
-                                oneCounter = 0;
-                                fourCounter = 0;
-                                if threeCounter >= 4
-                                    xP = [xLinePos (width+1) (width+1) xLinePos];
-                                    yP = [yLinePos yLinePos (height+1) (height+1)];
-                                    patch(xP, yP, 'r');
-                                end
+                        if (mCol(d)<=(xLinePos2))&&(mRow(d)>=yLinePos1)
+                            threeCounter = threeCounter + 1;
+                            twoCounter = 0;
+                            oneCounter = 0;
+                            fourCounter = 0;
+                            if threeCounter >= 4
+                                xP = [xLinePos1 (width+1) (width+1) xLinePos1];
+                                yP = [yLinePos1 yLinePos1 (height+1) (height+1)];
+                                patch(xP, yP, 'r');
                             end
                         end
-                        if mCol(d)>(xLinePos)
-                            if mRow(d)>=yLinePos
-                                fourCounter = fourCounter + 1;
-                                twoCounter = 0;
-                                threeCounter = 0;
-                                oneCounter = 0;
-                                if fourCounter >= 4
-                                    xP = [0 xLinePos xLinePos 0];
-                                    yP = [yLinePos yLinePos (height+1) (height+1)];
-                                    patch(xP, yP, 'r');
-                                end
+                        if (mCol(d)>(xLinePos1))&&(mRow(d)>=yLinePos1)
+                            fourCounter = fourCounter + 1;
+                            twoCounter = 0;
+                            threeCounter = 0;
+                            oneCounter = 0;
+                            if fourCounter >= 4
+                                xP = [0 xLinePos2 xLinePos2 0];
+                                yP = [yLinePos1 yLinePos1 (height+1) (height+1)];
+                                patch(xP, yP, 'r');
                             end
                         end
 
 
-                        xL = get(gca,'XLim');
-                        line(xL,[round(height/2) round(height/2)],'Color','r');
+                        xL1 = get(gca,'XLim');
+                        line(xL1,[round(2*height/5) round(2*height/5)],'Color','r');
+                        line(xL1,[round(3*height/5) round(3*height/5)],'Color','r');
                         yL = get(gca,'YLim');
-                        line([round(width/2) round(width/2)],yL,'Color','r');
+                        line([round(2*width/5) round(2*width/5)],yL,'Color','r');
+                        line([round(3*width/5) round(3*width/5)],yL,'Color','r');
                         %Sample Grid
                         grid on;
                         handles.axes2.GridColor = 'w';
@@ -306,11 +303,11 @@ if isTextStart
             %             end
         end
     end
-elseif isTextStop
-    hObject.String = 'Start';
-    handles.loop = false;
-    guidata(hObject, handles);
-end
+    elseif isTextStop
+        hObject.String = 'Start';
+        handles.loop = false;
+        guidata(hObject, handles);
+    end
 end
  
  
