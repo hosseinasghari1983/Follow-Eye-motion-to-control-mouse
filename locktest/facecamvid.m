@@ -225,7 +225,7 @@ if isTextStart
                         %xLine needs to have a coeff such that XLine width coeff + XLine coeff = 1
                         %if xLinePos = round(3*width/5), then mCol(d)>(2*xLinePos/3), 2*xLinePos/3 = 2*width/5
                         %2*width/5 + 3*width/5 = width
-                        if (mCol(d)>(xLinePos1))&&(mRow(d)<yLinePos2)
+                        if (mCol(d)>xLinePos1)&&(mRow(d)<yLinePos2)
                             oneCounter = oneCounter + 1;
                             twoCounter = 0;
                             threeCounter = 0;
@@ -239,8 +239,7 @@ if isTextStart
                                 yP = [0 0 yLinePos2 yLinePos2];
                                 patch(xP, yP, 'r');                     
                             end
-                        end
-                        if (mCol(d)<=(xLinePos2))&&(mRow(d)<yLinePos2) 
+                        elseif (mCol(d)<=xLinePos2)&&(mRow(d)<yLinePos2) 
                             twoCounter = twoCounter + 1;
                             oneCounter = 0;
                             threeCounter = 0;
@@ -254,8 +253,7 @@ if isTextStart
                                 yP = [0 0 yLinePos2 yLinePos2];
                                 patch(xP, yP, 'r');
                             end
-                        end
-                        if (mCol(d)<=(xLinePos2))&&(mRow(d)>=yLinePos1)
+                        elseif (mCol(d)<=xLinePos2)&&(mRow(d)>=yLinePos1)
                             threeCounter = threeCounter + 1;
                             twoCounter = 0;
                             oneCounter = 0;
@@ -269,8 +267,7 @@ if isTextStart
                                 yP = [yLinePos1 yLinePos1 (height+1) (height+1)];
                                 patch(xP, yP, 'r');
                             end
-                        end
-                        if (mCol(d)>(xLinePos1))&&(mRow(d)>=yLinePos1)
+                        elseif (mCol(d)>xLinePos1)&&(mRow(d)>=yLinePos1)
                             fourCounter = fourCounter + 1;
                             twoCounter = 0;
                             threeCounter = 0;
@@ -284,8 +281,21 @@ if isTextStart
                                 yP = [yLinePos1 yLinePos1 (height+1) (height+1)];
                                 patch(xP, yP, 'r');
                             end
-                        end
-                        if (mCol(d)<=xLinePos1)&&(mCol(d)>xLinePos2)&&(mRow(d)<yLinePos2)
+                        elseif (mCol(d)>xLinePos1)&&(mRow(d)>=yLinePos2)&&(mRow(d)<yLinePos1)
+                            fiveCounter = fiveCounter + 1;
+                            eightCounter=0;
+                            fourCounter = 0;
+                            sevenCounter = 0;
+                            sixCounter = 0;
+                            twoCounter = 0;
+                            threeCounter = 0;
+                            oneCounter = 0;
+                            if fiveCounter >= 4
+                                xP = [0 xLinePos2 xLinePos2 0];
+                                yP = [yLinePos2 yLinePos2 yLinePos1 yLinePos1];
+                                patch(xP, yP, 'r');
+                            end
+                        elseif (mCol(d)<=xLinePos1)&&(mCol(d)>xLinePos2)&&(mRow(d)<yLinePos2)
                             sixCounter = sixCounter + 1;
                             twoCounter = 0;
                             threeCounter = 0;
@@ -299,8 +309,21 @@ if isTextStart
                                 yP = [0 0 yLinePos2 yLinePos2];
                                 patch(xP, yP, 'r');                     
                             end
-                        end
-                        if (mCol(d)<=xLinePos1)&&(mCol(d)>xLinePos2)&&(mRow(d)>=yLinePos1)
+                        elseif (mCol(d)<=xLinePos2)&&(mRow(d)>=yLinePos2)&&(mRow(d)<yLinePos1)
+                            sevenCounter = sevenCounter + 1;
+                            eightCounter=0;
+                            fourCounter = 0;
+                            fiveCounter = 0;
+                            sixCounter = 0;
+                            twoCounter = 0;
+                            threeCounter = 0;
+                            oneCounter = 0;
+                            if sevenCounter >= 4
+                                xP = [xLinePos1 (width+1) (width+1) xLinePos1];
+                                yP = [yLinePos2 yLinePos2 yLinePos1 yLinePos1];
+                                patch(xP, yP, 'r');
+                            end
+                        elseif (mCol(d)<=xLinePos1)&&(mCol(d)>xLinePos2)&&(mRow(d)>=yLinePos1)
                             eightCounter = eightCounter + 1;
                             twoCounter = 0;
                             threeCounter = 0;
@@ -314,23 +337,13 @@ if isTextStart
                                 yP = [yLinePos1 yLinePos1 (height+1) (height+1)];
                                 patch(xP, yP, 'r');                     
                             end
+                        else
+                             xP = [xLinePos2 xLinePos1 xLinePos1 xLinePos2];
+                             yP = [yLinePos2 yLinePos2 yLinePos1 yLinePos1];
+                             patch(xP, yP, 'r'); 
+                            
                         end
-                       
-                        if (mCol(d)<(xLinePos2))&&(mRow(d)>=yLinePos2&&(mRow(d)<=yLinePos1))
-                            Counter = sevenCounter + 1;
-                            eightCounter=0;
-                            fourCounter = 0;
-                            fiveCounter = 0;
-                            sixCounter = 0;
-                            twoCounter = 0;
-                            threeCounter = 0;
-                            oneCounter = 0;
-                            if sevenCounter >= 4
-                                xP = [xLinePos1 (width+1) (width+1) xLinePos1];
-                                yP = [yLinePos2 yLinePos2 yLinePos1 yLinePos1];
-                                patch(xP, yP, 'r');
-                            end
-                        end
+
 
                         xL1 = get(gca,'XLim');
                         line(xL1,[round(2*height/5) round(2*height/5)],'Color','r');
