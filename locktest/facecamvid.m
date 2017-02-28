@@ -57,7 +57,7 @@ handles.EyeDetector = vision.CascadeObjectDetector('EyePairBig');
 handles.loop = false;
 handles.debug_Mode=1;
 % Set up data gathering condition
-handles.gather = false;
+%handles.gather = false;
  
 % Choose default command line output for facecamvid
 handles.output = hObject;
@@ -98,7 +98,7 @@ if isTextStart
     handles.loop = true; %Create stop_now in the handles structure
     guidata(hObject,handles);  %Update the GUI data
     marker = false;
-    j = 0;
+    %j = 0;
     oneCounter = 0;
     twoCounter = 0;
     threeCounter = 0;
@@ -114,7 +114,7 @@ if isTextStart
     import java.awt.Robot;
     import java.awt.event.*;
     robot=Robot ();
-    screenSize = [1920,1080];
+    pos=get(0,'Pointerlocation');
     
     videoFrame = rgb2gray((snapshot(cam)));
     %Detect face
@@ -128,7 +128,7 @@ if isTextStart
     
     while handles.loop
         tic;
-        pause(0.5)
+        %pause(0.25)
         for k=1:3
             videoFrame = rgb2gray((snapshot(cam)));
             cVFrame = imcrop(videoFrame, Face(1,:));
@@ -157,7 +157,7 @@ if isTextStart
             %Interpolation, image resize      
             imClass = class(videoRightEye);
             [x y] = meshgrid(1:size(videoRightEye,2), 1:size(videoRightEye,1));
-            [xi yi] = meshgrid(1:0.1:size(videoRightEye,2), 1:0.1:size(videoRightEye,1));
+            [xi yi] = meshgrid(1:0.3:size(videoRightEye,2), 1:0.3:size(videoRightEye,1));
             imClass;
             videoRightEye = cast(interp2(x,y,double(videoRightEye),xi,yi,'linear'),imClass);
             vRightEye = videoRightEye;
@@ -189,189 +189,202 @@ if isTextStart
 
                     %When gather data button is pressed, find position data
                     %normalized to 100pxs regardless of image resolution.
-                    if handles.gather
-                        cFrameSize = size(vRightEye);
-                        height = cFrameSize(1);
-                        width = cFrameSize(2);
-                        normalWidth = 1920;
-                        normalHeight = 1080;
-                        wRatio = normalWidth/width;
-                        hRatio = normalHeight/height;
-                        normalCol = wRatio*col;
-                        normalRow = hRatio*row;
+                    %if handles.gather
+                    cFrameSize = size(vRightEye);
+                    height = cFrameSize(1);
+                    width = cFrameSize(2);
+                    normalWidth = 1920;
+                    normalHeight = 1080;
+                    wRatio = normalWidth/width;
+                    hRatio = normalHeight/height;
+                    normalCol = wRatio*col;
+                    normalRow = hRatio*row;
 
-                        %Mouse robot test
-                        newCol = 1920 - floor(normalCol);
-                        %robot.mouseMove(newCol,floor(normalRow));
-                        aCol = [aCol, normalCol];
-                        aRow = [aRow, normalRow];
-                        %insert marker cluster
-                        for d=1:length(aCol)
-                            mCol = round(aCol./wRatio);
-                            mRow = round(aRow./hRatio);
-                            try
-                                vRightEye(mRow(d),mCol(d))=255;
-                            catch
-                            end
+                    aCol = [aCol, normalCol];
+                    aRow = [aRow, normalRow];
+                    %insert marker cluster
+                    for d=1:length(aCol)
+                        mCol = round(aCol./wRatio);
+                        mRow = round(aRow./hRatio);
+                        try
+                            vRightEye(mRow(d),mCol(d))=255;
+                        catch
                         end
-                        axes(handles.axes2);
-                        cla(handles.axes2);
-                        %display image on axes 2
-                        imagesc(fliplr(vRightEye)); colormap gray
-                        yLinePos1 = round(3*height/5);
-                        yLinePos2 = round(2*height/5);
-                        xLinePos1 = round(3*width/5);
-                        xLinePos2 = round(2*width/5);
-                        %xLine needs to have a coeff such that XLine width coeff + XLine coeff = 1
-                        %if xLinePos = round(3*width/5), then mCol(d)>(2*xLinePos/3), 2*xLinePos/3 = 2*width/5
-                        %2*width/5 + 3*width/5 = width
-                        if (mCol(d)>xLinePos1)&&(mRow(d)<yLinePos2)
-                            oneCounter = oneCounter + 1;
-                            twoCounter = 0;
-                            threeCounter = 0;
-                            fourCounter = 0;
-                            fiveCounter = 0;
-                            sixCounter = 0;
-                            sevenCounter = 0;
-                            eightCounter = 0;
-                            if oneCounter >= 4
-                                xP = [0 xLinePos2 xLinePos2 0];
-                                yP = [0 0 yLinePos2 yLinePos2];
-                                patch(xP, yP, 'r');                     
-                            end
-                        elseif (mCol(d)<=xLinePos2)&&(mRow(d)<yLinePos2) 
-                            twoCounter = twoCounter + 1;
-                            oneCounter = 0;
-                            threeCounter = 0;
-                            fourCounter = 0;
-                            fiveCounter = 0;
-                            sixCounter = 0;
-                            sevenCounter = 0;
-                            eightCounter = 0;
-                            if twoCounter >= 4
-                                xP = [xLinePos1 (width+1) (width+1) xLinePos1];
-                                yP = [0 0 yLinePos2 yLinePos2];
-                                patch(xP, yP, 'r');
-                            end
-                        elseif (mCol(d)<=xLinePos2)&&(mRow(d)>=yLinePos1)
-                            threeCounter = threeCounter + 1;
-                            twoCounter = 0;
-                            oneCounter = 0;
-                            fourCounter = 0;
-                            fiveCounter = 0;
-                            sixCounter = 0;
-                            sevenCounter = 0;
-                            eightCounter = 0;
-                            if threeCounter >= 4
-                                xP = [xLinePos1 (width+1) (width+1) xLinePos1];
-                                yP = [yLinePos1 yLinePos1 (height+1) (height+1)];
-                                patch(xP, yP, 'r');
-                            end
-                        elseif (mCol(d)>xLinePos1)&&(mRow(d)>=yLinePos1)
-                            fourCounter = fourCounter + 1;
-                            twoCounter = 0;
-                            threeCounter = 0;
-                            oneCounter = 0;
-                            fiveCounter = 0;
-                            sixCounter = 0;
-                            sevenCounter = 0;
-                            eightCounter = 0;
-                            if fourCounter >= 4
-                                xP = [0 xLinePos2 xLinePos2 0];
-                                yP = [yLinePos1 yLinePos1 (height+1) (height+1)];
-                                patch(xP, yP, 'r');
-                            end
-                        elseif (mCol(d)>xLinePos1)&&(mRow(d)>=yLinePos2)&&(mRow(d)<yLinePos1)
-                            fiveCounter = fiveCounter + 1;
-                            eightCounter=0;
-                            fourCounter = 0;
-                            sevenCounter = 0;
-                            sixCounter = 0;
-                            twoCounter = 0;
-                            threeCounter = 0;
-                            oneCounter = 0;
-                            if fiveCounter >= 4
-                                xP = [0 xLinePos2 xLinePos2 0];
-                                yP = [yLinePos2 yLinePos2 yLinePos1 yLinePos1];
-                                patch(xP, yP, 'r');
-                            end
-                        elseif (mCol(d)<=xLinePos1)&&(mCol(d)>xLinePos2)&&(mRow(d)<yLinePos2)
-                            sixCounter = sixCounter + 1;
-                            twoCounter = 0;
-                            threeCounter = 0;
-                            fourCounter = 0;
-                            fiveCounter = 0;
-                            oneCounter = 0;
-                            sevenCounter = 0;
-                            eightCounter = 0;
-                            if sixCounter >= 4
-                                xP = [xLinePos2 xLinePos1 xLinePos1 xLinePos2];
-                                yP = [0 0 yLinePos2 yLinePos2];
-                                patch(xP, yP, 'r');                     
-                            end
-                        elseif (mCol(d)<=xLinePos2)&&(mRow(d)>=yLinePos2)&&(mRow(d)<yLinePos1)
-                            sevenCounter = sevenCounter + 1;
-                            eightCounter=0;
-                            fourCounter = 0;
-                            fiveCounter = 0;
-                            sixCounter = 0;
-                            twoCounter = 0;
-                            threeCounter = 0;
-                            oneCounter = 0;
-                            if sevenCounter >= 4
-                                xP = [xLinePos1 (width+1) (width+1) xLinePos1];
-                                yP = [yLinePos2 yLinePos2 yLinePos1 yLinePos1];
-                                patch(xP, yP, 'r');
-                            end
-                        elseif (mCol(d)<=xLinePos1)&&(mCol(d)>xLinePos2)&&(mRow(d)>=yLinePos1)
-                            eightCounter = eightCounter + 1;
-                            twoCounter = 0;
-                            threeCounter = 0;
-                            fourCounter = 0;
-                            fiveCounter = 0;
-                            sixCounter = 0;
-                            sevenCounter = 0;
-                            oneCounter = 0;
-                            if eightCounter >= 4
-                                xP = [xLinePos2 xLinePos1 xLinePos1 xLinePos2];
-                                yP = [yLinePos1 yLinePos1 (height+1) (height+1)];
-                                patch(xP, yP, 'r');                     
-                            end
-                        else
-                             xP = [xLinePos2 xLinePos1 xLinePos1 xLinePos2];
-                             yP = [yLinePos2 yLinePos2 yLinePos1 yLinePos1];
-                             patch(xP, yP, 'r'); 
-                            
-                        end
-
-
-                        xL1 = get(gca,'XLim');
-                        line(xL1,[round(2*height/5) round(2*height/5)],'Color','r');
-                        line(xL1,[round(3*height/5) round(3*height/5)],'Color','r');
-                        yL = get(gca,'YLim');
-                        line([round(2*width/5) round(2*width/5)],yL,'Color','r');
-                        line([round(3*width/5) round(3*width/5)],yL,'Color','r');
-                        %Sample Grid
-                        grid on;
-                        handles.axes2.GridColor = 'w';
-                        handles = guidata(hObject);
-                        j = j + 1;
                     end
+                    axes(handles.axes2);
+                    cla(handles.axes2);
+                    %display image on axes 2
+                    imagesc(fliplr(vRightEye)); colormap gray
+                    yLinePos1 = round(3*height/5);
+                    yLinePos2 = round(2*height/5);
+                    xLinePos1 = round(3*width/5);
+                    xLinePos2 = round(2*width/5);
+                    %xLine needs to have a coeff such that XLine width coeff + XLine coeff = 1
+                    %if xLinePos = round(3*width/5), then mCol(d)>(2*xLinePos/3), 2*xLinePos/3 = 2*width/5
+                    %2*width/5 + 3*width/5 = width
+                    if (mCol(d)>xLinePos1)&&(mRow(d)<yLinePos2)
+                        oneCounter = oneCounter + 1;
+                        twoCounter = 0;
+                        threeCounter = 0;
+                        fourCounter = 0;
+                        fiveCounter = 0;
+                        sixCounter = 0;
+                        sevenCounter = 0;
+                        eightCounter = 0;
+                        if oneCounter >= 4
+                            xP = [0 xLinePos2 xLinePos2 0];
+                            yP = [0 0 yLinePos2 yLinePos2];
+                            patch(xP, yP, 'r');    
+                            pos = [pos(1)-20,pos(2)-20];
+                            robot.mouseMove(pos(1),pos(2));
+                        end
+                    elseif (mCol(d)<=xLinePos2)&&(mRow(d)<yLinePos2) 
+                        twoCounter = twoCounter + 1;
+                        oneCounter = 0;
+                        threeCounter = 0;
+                        fourCounter = 0;
+                        fiveCounter = 0;
+                        sixCounter = 0;
+                        sevenCounter = 0;
+                        eightCounter = 0;
+                        if twoCounter >= 4
+                            xP = [xLinePos1 (width+1) (width+1) xLinePos1];
+                            yP = [0 0 yLinePos2 yLinePos2];
+                            patch(xP, yP, 'r');
+                            pos = [pos(1)+20,pos(2)-20];
+                            robot.mouseMove(pos(1),pos(2));
+                        end
+                    elseif (mCol(d)<=xLinePos2)&&(mRow(d)>=yLinePos1)
+                        threeCounter = threeCounter + 1;
+                        twoCounter = 0;
+                        oneCounter = 0;
+                        fourCounter = 0;
+                        fiveCounter = 0;
+                        sixCounter = 0;
+                        sevenCounter = 0;
+                        eightCounter = 0;
+                        if threeCounter >= 4
+                            xP = [xLinePos1 (width+1) (width+1) xLinePos1];
+                            yP = [yLinePos1 yLinePos1 (height+1) (height+1)];
+                            patch(xP, yP, 'r');
+                            pos = [pos(1)+20,pos(2)+20];
+                            robot.mouseMove(pos(1),pos(2));
+                        end
+                    elseif (mCol(d)>xLinePos1)&&(mRow(d)>=yLinePos1)
+                        fourCounter = fourCounter + 1;
+                        twoCounter = 0;
+                        threeCounter = 0;
+                        oneCounter = 0;
+                        fiveCounter = 0;
+                        sixCounter = 0;
+                        sevenCounter = 0;
+                        eightCounter = 0;
+                        if fourCounter >= 4
+                            xP = [0 xLinePos2 xLinePos2 0];
+                            yP = [yLinePos1 yLinePos1 (height+1) (height+1)];
+                            patch(xP, yP, 'r');
+                            pos = [pos(1)-20,pos(2)+20];
+                            robot.mouseMove(pos(1),pos(2));
+                        end
+                    elseif (mCol(d)>xLinePos1)&&(mRow(d)>=yLinePos2)&&(mRow(d)<yLinePos1)
+                        fiveCounter = fiveCounter + 1;
+                        eightCounter=0;
+                        fourCounter = 0;
+                        sevenCounter = 0;
+                        sixCounter = 0;
+                        twoCounter = 0;
+                        threeCounter = 0;
+                        oneCounter = 0;
+                        if fiveCounter >= 4
+                            xP = [0 xLinePos2 xLinePos2 0];
+                            yP = [yLinePos2 yLinePos2 yLinePos1 yLinePos1];
+                            patch(xP, yP, 'r');
+                            pos = [pos(1)-20,pos(2)];
+                            robot.mouseMove(pos(1),pos(2));
+                        end
+                    elseif (mCol(d)<=xLinePos1)&&(mCol(d)>xLinePos2)&&(mRow(d)<yLinePos2)
+                        sixCounter = sixCounter + 1;
+                        twoCounter = 0;
+                        threeCounter = 0;
+                        fourCounter = 0;
+                        fiveCounter = 0;
+                        oneCounter = 0;
+                        sevenCounter = 0;
+                        eightCounter = 0;
+                        if sixCounter >= 4
+                            xP = [xLinePos2 xLinePos1 xLinePos1 xLinePos2];
+                            yP = [0 0 yLinePos2 yLinePos2];
+                            patch(xP, yP, 'r');       
+                            pos = [pos(1),pos(2)-20];
+                            robot.mouseMove(pos(1),pos(2));
+                        end
+                    elseif (mCol(d)<=xLinePos2)&&(mRow(d)>=yLinePos2)&&(mRow(d)<yLinePos1)
+                        sevenCounter = sevenCounter + 1;
+                        eightCounter=0;
+                        fourCounter = 0;
+                        fiveCounter = 0;
+                        sixCounter = 0;
+                        twoCounter = 0;
+                        threeCounter = 0;
+                        oneCounter = 0;
+                        if sevenCounter >= 4
+                            xP = [xLinePos1 (width+1) (width+1) xLinePos1];
+                            yP = [yLinePos2 yLinePos2 yLinePos1 yLinePos1];
+                            patch(xP, yP, 'r');
+                            pos = [pos(1)+20,pos(2)];
+                            robot.mouseMove(pos(1),pos(2));
+                        end
+                    elseif (mCol(d)<=xLinePos1)&&(mCol(d)>xLinePos2)&&(mRow(d)>=yLinePos1)
+                        eightCounter = eightCounter + 1;
+                        twoCounter = 0;
+                        threeCounter = 0;
+                        fourCounter = 0;
+                        fiveCounter = 0;
+                        sixCounter = 0;
+                        sevenCounter = 0;
+                        oneCounter = 0;
+                        if eightCounter >= 4
+                            xP = [xLinePos2 xLinePos1 xLinePos1 xLinePos2];
+                            yP = [yLinePos1 yLinePos1 (height+1) (height+1)];
+                            patch(xP, yP, 'r'); 
+                            pos = [pos(1),pos(2)+20];
+                            robot.mouseMove(pos(1),pos(2));
+                        end
+                    else
+                         xP = [xLinePos2 xLinePos1 xLinePos1 xLinePos2];
+                         yP = [yLinePos2 yLinePos2 yLinePos1 yLinePos1];
+                         patch(xP, yP, 'r'); 
+
+                    end
+
+
+                    xL1 = get(gca,'XLim');
+                    line(xL1,[round(2*height/5) round(2*height/5)],'Color','r');
+                    line(xL1,[round(3*height/5) round(3*height/5)],'Color','r');
+                    yL = get(gca,'YLim');
+                    line([round(2*width/5) round(2*width/5)],yL,'Color','r');
+                    line([round(3*width/5) round(3*width/5)],yL,'Color','r');
+                    %Sample Grid
+                    grid on;
+                    handles.axes2.GridColor = 'w';
+                    handles = guidata(hObject);
+                        %j = j + 1;
+                    %end
                     %Once enough markers are found, output average position
                     %data with mins and max.
-                    if  j==200
-                        handles.gather = false;
-                        j = 0;
-                        averageCol = mean(aCol)  %Column for X coordinate
-                        maxCol = max(aCol)
-                        minCol = min(aCol)
-                        averageRow = mean(aRow) %Row for Y coordinate
-                        maxRow = max(aRow)
-                        minRow = min(aRow)
-                        hObject.String = 'Start';
-                        handles.loop = false;
-                        guidata(hObject, handles);
-                    end
+%                     if  j==200
+%                         handles.gather = false;
+%                         j = 0;
+%                         averageCol = mean(aCol)  %Column for X coordinate
+%                         maxCol = max(aCol)
+%                         minCol = min(aCol)
+%                         averageRow = mean(aRow) %Row for Y coordinate
+%                         maxRow = max(aRow)
+%                         minRow = min(aRow)
+%                         hObject.String = 'Start';
+%                         handles.loop = false;
+%                         guidata(hObject, handles);
+%                     end
                 end
             end
             a=toc;
@@ -390,10 +403,10 @@ end
  
  
 % --- Executes on button press in pushbutton5.
-function pushbutton5_Callback(hObject, eventdata, handles)
+%function pushbutton5_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton5 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.gather = true; 
-guidata(hObject, handles); %Get the newest GUI data   
-end
+%handles.gather = true; 
+%guidata(hObject, handles); %Get the newest GUI data   
+%end
