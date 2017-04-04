@@ -99,7 +99,7 @@ if isTextStart
     handles.loop = true; %Create stop_now in the handles structure
     guidata(hObject,handles);  %Update the GUI data
     marker = false;
-    %j = 0;
+    j = 0;
     frameCounter = 0;
     oneCounter = 0;
     twoCounter = 0;
@@ -117,7 +117,7 @@ if isTextStart
     import java.awt.event.*;
     robot=Robot ();
     pos=get(0,'Pointerlocation');
-    
+    EyesFrame = [];
     videoFrame = rgb2gray((snapshot(cam)));
     %Detect face
     Face = step(handles.FaceDetector, videoFrame);
@@ -315,14 +315,14 @@ if isTextStart
         cla(handles.axes2);
         %display image on axes 2
         imagesc(fliplr(vRightEye)); colormap gray
-        yLinePos1 = round(3*height/5);
-        yLinePos2 = round(2*height/5);
-        xLinePos1 = round(3*width/5);
-        xLinePos2 = round(2*width/5);
+        yLinePos1 = round(13*height/20);
+        yLinePos2 = round(9*height/20);
+        xLinePos1 = round(13*width/20);
+        xLinePos2 = round(11*width/20);
         %xLine needs to have a coeff such that XLine width coeff + XLine coeff = 1
         %if xLinePos = round(3*width/5), then mCol(d)>(2*xLinePos/3), 2*xLinePos/3 = 2*width/5
         %2*width/5 + 3*width/5 = width
-        if (mCol(d)>xLinePos1)&&(mRow(d)<yLinePos2)
+        if ((width - mCol(d))>xLinePos1)&&(mRow(d)<yLinePos2)
             oneCounter = oneCounter + 1;
             twoCounter = 0;
             threeCounter = 0;
@@ -332,13 +332,13 @@ if isTextStart
             sevenCounter = 0;
             eightCounter = 0;
             if oneCounter >= 4
-                xP = [0 xLinePos2 xLinePos2 0];
+                xP = [xLinePos1 (width+1) (width+1) xLinePos1];
                 yP = [0 0 yLinePos2 yLinePos2];
-          %      patch(xP, yP, 'r');    
-                pos = [pos(1)-20,pos(2)-20];
+                %patch(xP, yP, 'r');
+                pos = [pos(1)+20,pos(2)-20];
                 robot.mouseMove(pos(1),pos(2));
             end
-        elseif (mCol(d)<=xLinePos2)&&(mRow(d)<yLinePos2) 
+        elseif ((width - mCol(d))<=xLinePos2)&&(mRow(d)<yLinePos2) 
             twoCounter = twoCounter + 1;
             oneCounter = 0;
             threeCounter = 0;
@@ -348,13 +348,13 @@ if isTextStart
             sevenCounter = 0;
             eightCounter = 0;
             if twoCounter >= 4
-                xP = [xLinePos1 (width+1) (width+1) xLinePos1];
+                xP = [0 xLinePos2 xLinePos2 0];
                 yP = [0 0 yLinePos2 yLinePos2];
-           %     patch(xP, yP, 'r');
-                pos = [pos(1)+20,pos(2)-20];
+                %patch(xP, yP, 'r');    
+                pos = [pos(1)-20,pos(2)-20];
                 robot.mouseMove(pos(1),pos(2));
             end
-        elseif (mCol(d)<=xLinePos2)&&(mRow(d)>=yLinePos1)
+        elseif ((width-mCol(d))<=xLinePos2)&&(mRow(d)>=yLinePos1)
             threeCounter = threeCounter + 1;
             twoCounter = 0;
             oneCounter = 0;
@@ -364,13 +364,13 @@ if isTextStart
             sevenCounter = 0;
             eightCounter = 0;
             if threeCounter >= 4
-                xP = [xLinePos1 (width+1) (width+1) xLinePos1];
+                xP = [0 xLinePos2 xLinePos2 0];
                 yP = [yLinePos1 yLinePos1 (height+1) (height+1)];
-           %     patch(xP, yP, 'r');
-                pos = [pos(1)+20,pos(2)+20];
+                patch(xP, yP, 'r');
+                pos = [pos(1)-20,pos(2)+20];
                 robot.mouseMove(pos(1),pos(2));
             end
-        elseif (mCol(d)>xLinePos1)&&(mRow(d)>=yLinePos1)
+        elseif ((width-mCol(d))>xLinePos1)&&(mRow(d)>=yLinePos1)
             fourCounter = fourCounter + 1;
             twoCounter = 0;
             threeCounter = 0;
@@ -380,13 +380,13 @@ if isTextStart
             sevenCounter = 0;
             eightCounter = 0;
             if fourCounter >= 4
-                xP = [0 xLinePos2 xLinePos2 0];
+                xP = [xLinePos1 (width+1) (width+1) xLinePos1];
                 yP = [yLinePos1 yLinePos1 (height+1) (height+1)];
-          %      patch(xP, yP, 'r');
-                pos = [pos(1)-20,pos(2)+20];
+                %patch(xP, yP, 'r');
+                pos = [pos(1)+20,pos(2)+20];
                 robot.mouseMove(pos(1),pos(2));
             end
-        elseif (mCol(d)>xLinePos1)&&(mRow(d)>=yLinePos2)&&(mRow(d)<yLinePos1)
+        elseif ((width-mCol(d))>xLinePos1)&&(mRow(d)>=yLinePos2)&&(mRow(d)<yLinePos1)
             fiveCounter = fiveCounter + 1;
             eightCounter=0;
             fourCounter = 0;
@@ -396,13 +396,13 @@ if isTextStart
             threeCounter = 0;
             oneCounter = 0;
             if fiveCounter >= 4
-                xP = [0 xLinePos2 xLinePos2 0];
+                xP = [xLinePos1 (width+1) (width+1) xLinePos1];
                 yP = [yLinePos2 yLinePos2 yLinePos1 yLinePos1];
-           %     patch(xP, yP, 'r');
-                pos = [pos(1)-20,pos(2)];
+                %patch(xP, yP, 'r');
+                pos = [pos(1)+20,pos(2)];
                 robot.mouseMove(pos(1),pos(2));
             end
-        elseif (mCol(d)<=xLinePos1)&&(mCol(d)>xLinePos2)&&(mRow(d)<yLinePos2)
+        elseif ((width-mCol(d))<=xLinePos1)&&((width-mCol(d))>xLinePos2)&&(mRow(d)<yLinePos2)
             sixCounter = sixCounter + 1;
             twoCounter = 0;
             threeCounter = 0;
@@ -414,11 +414,11 @@ if isTextStart
             if sixCounter >= 4
                 xP = [xLinePos2 xLinePos1 xLinePos1 xLinePos2];
                 yP = [0 0 yLinePos2 yLinePos2];
-            %    patch(xP, yP, 'r');       
+                %patch(xP, yP, 'r');       
                 pos = [pos(1),pos(2)-20];
                 robot.mouseMove(pos(1),pos(2));
             end
-        elseif (mCol(d)<=xLinePos2)&&(mRow(d)>=yLinePos2)&&(mRow(d)<yLinePos1)
+        elseif ((width-mCol(d))<=xLinePos2)&&(mRow(d)>=yLinePos2)&&(mRow(d)<yLinePos1)
             sevenCounter = sevenCounter + 1;
             eightCounter=0;
             fourCounter = 0;
@@ -428,13 +428,13 @@ if isTextStart
             threeCounter = 0;
             oneCounter = 0;
             if sevenCounter >= 4
-                xP = [xLinePos1 (width+1) (width+1) xLinePos1];
+                xP = [0 xLinePos2 xLinePos2 0];
                 yP = [yLinePos2 yLinePos2 yLinePos1 yLinePos1];
-            %    patch(xP, yP, 'r');
-                pos = [pos(1)+20,pos(2)];
+                %patch(xP, yP, 'r');
+                pos = [pos(1)-20,pos(2)];
                 robot.mouseMove(pos(1),pos(2));
             end
-        elseif (mCol(d)<=xLinePos1)&&(mCol(d)>xLinePos2)&&(mRow(d)>=yLinePos1)
+        elseif ((width-mCol(d))<=xLinePos1)&&((width-mCol(d))>xLinePos2)&&(mRow(d)>=yLinePos1)
             eightCounter = eightCounter + 1;
             twoCounter = 0;
             threeCounter = 0;
@@ -446,45 +446,54 @@ if isTextStart
             if eightCounter >= 4
                 xP = [xLinePos2 xLinePos1 xLinePos1 xLinePos2];
                 yP = [yLinePos1 yLinePos1 (height+1) (height+1)];
-           %     patch(xP, yP, 'r'); 
+                %patch(xP, yP, 'r'); 
                 pos = [pos(1),pos(2)+20];
                 robot.mouseMove(pos(1),pos(2));
             end
         else
              xP = [xLinePos2 xLinePos1 xLinePos1 xLinePos2];
              yP = [yLinePos2 yLinePos2 yLinePos1 yLinePos1];
-           %  patch(xP, yP, 'r'); 
+             %patch(xP, yP, 'r'); 
 
         end
 
 
         xL1 = get(gca,'XLim');
-        line(xL1,[round(2*height/5) round(2*height/5)],'Color','r');
-        line(xL1,[round(3*height/5) round(3*height/5)],'Color','r');
+        line(xL1,[round(5*height/20) round(5*height/20)],'Color','r');
+        line(xL1,[round(7*height/20) round(7*height/20)],'Color','r');
+        line(xL1,[round(9*height/20) round(9*height/20)],'Color','r');
+        line(xL1,[round(11*height/20) round(11*height/20)],'Color','r');
+        line(xL1,[round(13*height/20) round(13*height/20)],'Color','r');
+        line(xL1,[round(15*height/20) round(15*height/20)],'Color','r');
         yL = get(gca,'YLim');
-        line([round(2*width/5) round(2*width/5)],yL,'Color','r');
-        line([round(3*width/5) round(3*width/5)],yL,'Color','r');
+        line([round(5*width/20) round(5*width/20)],yL,'Color','r');
+        line([round(7*width/20) round(7*width/20)],yL,'Color','r');
+        line([round(9*width/20) round(9*width/20)],yL,'Color','r');
+        line([round(11*width/20) round(11*width/20)],yL,'Color','r');
+        line([round(13*width/20) round(13*width/20)],yL,'Color','r');
+        line([round(15*width/20) round(15*width/20)],yL,'Color','r');
+        line([round(17*width/20) round(17*width/20)],yL,'Color','r');
         %Sample Grid
         grid on;
         handles.axes2.GridColor = 'w';
         handles = guidata(hObject);
-                    %j = j + 1;
-                %end
-                %Once enough markers are found, output average position
-                %data with mins and max.
-%                     if  j==200
-%                         handles.gather = false;
-%                         j = 0;
-%                         averageCol = mean(aCol)  %Column for X coordinate
-%                         maxCol = max(aCol)
-%                         minCol = min(aCol)
-%                         averageRow = mean(aRow) %Row for Y coordinate
-%                         maxRow = max(aRow)
-%                         minRow = min(aRow)
-%                         hObject.String = 'Start';
-%                         handles.loop = false;
-%                         guidata(hObject, handles);
-%                     end
+               
+        %Once enough markers are found, output average position
+        %data with mins and max.
+        j = j + 1;
+        if  j==60
+            handles.gather = false;
+            j = 0;
+            averageCol = mean(aCol)  %Column for X coordinate
+            maxCol = max(aCol)
+            minCol = min(aCol)
+            averageRow = mean(aRow) %Row for Y coordinate
+            maxRow = max(aRow)
+            minRow = min(aRow)
+            hObject.String = 'Start';
+            handles.loop = false;
+            guidata(hObject, handles);
+        end
 
 
         a=toc;
