@@ -124,13 +124,43 @@ if isTextStart
     Face = step(handles.FaceDetector, videoFrame);
     faceCheck = size(Face);
     if faceCheck(1) > 1
-        Face = Face(2,:);
+        Face = Face(1,:);
+    elseif faceCheck(1) < 1
+        while faceCheck(1) < 1
+            videoFrame = rgb2gray((snapshot(cam)));
+            %Detect face
+            Face = step(handles.FaceDetector, videoFrame);
+            faceCheck = size(Face);
+        end
+        Face = Face(1,:);
     end
     cVFrame = imcrop(videoFrame, Face);
     EyesFrame = step(handles.EyeDetector, cVFrame);
     eyeCheck = size(EyesFrame);
     if eyeCheck(1) > 1
-        EyesFrame = EyesFrame(2,:);
+        EyesFrame = EyesFrame(1,:);
+    elseif eyeCheck(1) < 1
+        while eyeCheck(1) < 1
+            videoFrame = rgb2gray((snapshot(cam)));
+            %Detect face
+            Face = step(handles.FaceDetector, videoFrame);
+            faceCheck = size(Face);
+            if faceCheck(1) > 1
+                Face = Face(1,:);
+            elseif faceCheck(1) < 1
+                while faceCheck(1) < 1
+                    videoFrame = rgb2gray((snapshot(cam)));
+                    %Detect face
+                    Face = step(handles.FaceDetector, videoFrame);
+                    faceCheck = size(Face);
+                end
+                Face = Face(1,:);
+            end
+            cVFrame = imcrop(videoFrame, Face);
+            EyesFrame = step(handles.EyeDetector, cVFrame);
+            eyeCheck = size(EyesFrame);
+        end
+        EyesFrame = EyesFrame(1,:);
     end
     EyesBox = imcrop(cVFrame, EyesFrame);
     
@@ -228,27 +258,14 @@ if isTextStart
         cla(handles.axes2);
         %display image on axes 2
         imagesc(fliplr(vRightEye)); colormap gray
-        
-%         set(gca,'xtick',[0:(height/handles.DIVrow):height])
-%         set(gca,'ytick',linspace(0, width,(width/handles.DIVcol)))
-%         grid on
-        
-%         xL1 = get(gca,'XLim');
-%         for i=1:handles.DIVrow
-%             line(xL1,[(i*height/handles.DIVrow) (i*height/handles.DIVrow)],'Color','r');
-%         end
-%         yL1 = get(gca,'YLim');
-%         for i=1:handles.DIVcol
-%             line([(i*width/handles.DIVcol) (i*width/handles.DIVcol)],yL1,'Color','r');
-%         end
 
 %Displays grid. If program lags, comment out.
-        for i=1:handles.DIVrow
-            line([0 width], [(i-1)*height/handles.DIVrow+1 (i-1)*height/handles.DIVrow+1],'Color','r');
-        end
-        for i=1:handles.DIVcol
-            line( [(i-1)*width/handles.DIVcol+1 (i-1)*width/handles.DIVcol+1], [0 height],'Color','r');
-        end
+%         for i=1:handles.DIVrow
+%             line([0 width], [(i-1)*height/handles.DIVrow+1 (i-1)*height/handles.DIVrow+1],'Color','r');
+%         end
+%         for i=1:handles.DIVcol
+%             line( [(i-1)*width/handles.DIVcol+1 (i-1)*width/handles.DIVcol+1], [0 height],'Color','r');
+%         end
         
         BAS=patchandmovemouse(mRow(d),mCol(d),width,height,BAS,handles.DIVrow,handles.DIVcol);
        
