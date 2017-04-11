@@ -102,14 +102,14 @@ if isTextStart
     marker = false;
     j = 0;
     frameCounter = 0;
-    oneCounter = 0;
-    twoCounter = 0;
-    threeCounter = 0;
-    fourCounter = 0;
-    fiveCounter = 0;
-    sixCounter = 0;
-    sevenCounter = 0;
-    eightCounter = 0;
+%     oneCounter = 0;
+%     twoCounter = 0;
+%     threeCounter = 0;
+%     fourCounter = 0;
+%     fiveCounter = 0;
+%     sixCounter = 0;
+%     sevenCounter = 0;
+%     eightCounter = 0;
     aCol = [];
     aRow = [];
     mCol = [];
@@ -192,10 +192,10 @@ if isTextStart
         sf=fit([x1,y1],z1,'poly25');
         z=sf(x,y);
         %sets the corners to 255
-        z(find(x<0.2*size(x,1) | y<0.4*size(y,1)| x>0.8*size(x,1) | y>0.8*size(y,2)))=255;
+        %z(find(x<0.2*size(x,1) | y<0.4*size(y,1)| x>0.8*size(x,1) | y>0.8*size(y,2)))=255;
         %find minimum of the curve
         [row,col]=find(z==min(min(z)));
-        marker = true;
+        %marker = true;        
 
         %When gather data button is pressed, find position data
         %normalized to 100pxs regardless of image resolution.
@@ -243,19 +243,15 @@ if isTextStart
 %         end
 
 %Displays grid. If program lags, comment out.
-for i=1:handles.DIVrow
-    line([0 width], [(i-1)*height/handles.DIVrow+1 (i-1)*height/handles.DIVrow+1],'Color','r');
-end
-for i=1:handles.DIVcol
-    line( [(i-1)*width/handles.DIVcol+1 (i-1)*width/handles.DIVcol+1], [0 height],'Color','r');
-end
-
-
+        for i=1:handles.DIVrow
+            line([0 width], [(i-1)*height/handles.DIVrow+1 (i-1)*height/handles.DIVrow+1],'Color','r');
+        end
+        for i=1:handles.DIVcol
+            line( [(i-1)*width/handles.DIVcol+1 (i-1)*width/handles.DIVcol+1], [0 height],'Color','r');
+        end
+        
         BAS=patchandmovemouse(mRow(d),mCol(d),width,height,BAS,handles.DIVrow,handles.DIVcol);
-
-
        
-
         %Sample Grid
         grid on;
         handles.axes2.GridColor = 'w';
