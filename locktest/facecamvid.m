@@ -22,7 +22,7 @@ function varargout = facecamvid(varargin)
  
 % Edit the above text to modify the response to help facecamvid
  
-% Last Modified by GUIDE v2.5 24-Jan-2017 08:16:51
+% Last Modified by GUIDE v2.5 11-Apr-2017 09:06:03
  
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -233,8 +233,8 @@ if isTextStart
         cFrameSize = size(vRightEye);
         height = cFrameSize(1);
         width = cFrameSize(2);
-        normalWidth = 1920;
-        normalHeight = 1080;
+        normalWidth = 1881;
+        normalHeight = 818;
         wRatio = normalWidth/width;
         hRatio = normalHeight/height;
         normalCol = wRatio*col;
@@ -258,6 +258,9 @@ if isTextStart
         cla(handles.axes2);
         %display image on axes 2
         imagesc(fliplr(vRightEye)); colormap gray
+        
+        pos = [normalWidth - tt2*wRatio + 10, tt1*hRatio + 200];
+        robot.mouseMove(pos(1),pos(2));
 
 %Displays grid. If program lags, comment out.
 %         for i=1:handles.DIVrow
@@ -269,10 +272,6 @@ if isTextStart
         
         BAS=patchandmovemouse(mRow(d),mCol(d),width,height,BAS,handles.DIVrow,handles.DIVcol);
        
-        %Sample Grid
-        grid on;
-        handles.axes2.GridColor = 'w';
-        handles = guidata(hObject);
                
         %Once enough markers are found, output average position
         %data with mins and max.
