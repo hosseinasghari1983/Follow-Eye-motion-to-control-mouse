@@ -119,6 +119,8 @@ if isTextStart
     robot=Robot ();
     pos=get(0,'Pointerlocation');
     EyesFrame = [];
+    dx=[];
+    dy=[];
     videoFrame = rgb2gray((snapshot(cam)));
     %Detect face
     Face = step(handles.FaceDetector, videoFrame);
@@ -166,9 +168,9 @@ if isTextStart
     
     
     BAS=zeros(handles.DIVrow,handles.DIVcol);
-    
+    a = tic;
     while handles.loop
-        tic;
+        %tic;
         %pause(0.25)
 
         videoFrame = rgb2gray((snapshot(cam)));
@@ -233,8 +235,11 @@ if isTextStart
         cFrameSize = size(vRightEye);
         height = cFrameSize(1);
         width = cFrameSize(2);
-        normalWidth = 1881;
-        normalHeight = 818;
+%         normalWidth = 1881;
+%         normalHeight = 818;
+        normalWidth = 1920;
+        normalHeight = 1080;
+
         wRatio = normalWidth/width;
         hRatio = normalHeight/height;
         normalCol = wRatio*col;
@@ -243,24 +248,26 @@ if isTextStart
         aCol = [aCol, normalCol];
         aRow = [aRow, normalRow];
         %insert marker cluster
-%         for d=1:length(aCol)
-        d=length(aCol);
-        mCol = round(aCol./wRatio);
-        mRow = round(aRow./hRatio);
-        tt1=mRow(d);
-        tt2=mCol(d);
-        try
-            vRightEye(tt1,tt2)=255;
-        catch
+        for d=1:length(aCol)
+            %d=length(aCol);
+            mCol = round(aCol./wRatio);
+            mRow = round(aRow./hRatio);
+            tt1=mRow(d);
+            tt2=mCol(d);
+            try
+                vRightEye(tt1,tt2)=255;
+            catch
+            end
         end
-%         end
+        dx=[dx mCol(1)-mCol(length(mCol))];
+        dy=[dy mRow(1)-mRow(length(mRow))];
         axes(handles.axes2);
         cla(handles.axes2);
         %display image on axes 2
         imagesc(fliplr(vRightEye)); colormap gray
         
-        pos = [normalWidth - tt2*wRatio + 10, tt1*hRatio + 200];
-        robot.mouseMove(pos(1),pos(2));
+%         pos = [normalWidth - tt2*wRatio + 10, tt1*hRatio + 200];
+%         robot.mouseMove(pos(1),pos(2));
 
 %Displays grid. If program lags, comment out.
 %         for i=1:handles.DIVrow
@@ -290,9 +297,34 @@ if isTextStart
 %             guidata(hObject, handles);
 %         end
 
+        b=toc(a);
+        if b>=1
+            X=mean(dx(2:length(dx)));
+            Y=mean(dy(2:length(dy)));
+            try
+                %nCol=[nCol mCol(1)+round(X)];
+                %nRow=[nRow mRow(1)+round(Y)];
+                BW=zeros(size(vRightEye)); 
+                BW(mRow(1)-round(Y),mCol(1)-round(X))=1;
+                image=imoverlay(vRightEye,BW,'red');
+                  %vRightEye(mRow(1)+round(Y),mCol(1)+round(X))=70;
+            catch
+            end
+            
+            pos = [normalWidth - (mCol(1)-round(X))*wRatio + 10, (mRow(1)-round(Y))*hRatio];
+            robot.mouseMove(pos(1),pos(2));
 
-        a=toc;
-        set(handles.text5, 'String', num2str(1/a));
+
+            dx=[];
+            dy=[];
+            aCol=[];
+            aRow=[];
+            a=tic;
+        end
+
+
+%         a=toc;
+%         set(handles.text5, 'String', num2str(1/a));
         handles = guidata(hObject);  %Get the newest GUI data
         %             catch
         %             end
