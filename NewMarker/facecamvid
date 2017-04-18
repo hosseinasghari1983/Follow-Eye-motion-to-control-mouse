@@ -159,8 +159,6 @@ if isTextStart
         EyesFrame = EyesFrame(1,:);
     end
     EyesBox = imcrop(cVFrame, EyesFrame);
-    
-    
     BAS=zeros(handles.DIVrow,handles.DIVcol);
     a=tic;
     while handles.loop
@@ -241,8 +239,8 @@ if isTextStart
             catch
             end
         end
-        dx=[dy mCol(1)-mCol(length(mCol))];
-        dy=[dx mRow(1)-mRow(length(mRow))];
+        dx=[dx mCol(1)-mCol(length(mCol))];
+        dy=[dy mRow(1)-mRow(length(mRow))];
         axes(handles.axes2);
         cla(handles.axes2);
         %display image on axes 2
@@ -281,14 +279,14 @@ if isTextStart
 %         end
 %imoverlay
 b=toc(a);
-        if b>=1
+        if b>=0.5
                 X=mean(dx(2:length(dx)));
                 Y=mean(dy(2:length(dy)));
                 try
                     %nCol=[nCol mCol(1)+round(X)];
                     %nRow=[nRow mRow(1)+round(Y)];
                     BW=zeros(size(vRightEye)); 
-                    BW(mRow(1)+round(Y),mCol(1)+round(X))=1;
+                    BW(mRow(1)-round(Y),mCol(1)-round(X))=1;
                     image=imoverlay(vRightEye,BW,'red');
                       %vRightEye(mRow(1)+round(Y),mCol(1)+round(X))=70;
                 catch
