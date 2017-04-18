@@ -163,7 +163,7 @@ if isTextStart
     a=tic;
     while handles.loop
         %pause(0.25)
-
+        c=tic;
         videoFrame = rgb2gray((snapshot(cam)));
         cVFrame = imcrop(videoFrame, Face); %For fixed detection
         
@@ -304,8 +304,8 @@ b=toc(a);
                 aRow=[];
                 a=tic;
         end
-        
-        %set(handles.text5, 'String', num2str(1/a));
+        e=toc(c);
+        set(handles.text5, 'String', num2str(1/e));
         handles = guidata(hObject);  %Get the newest GUI data
         %             catch
         %             end
