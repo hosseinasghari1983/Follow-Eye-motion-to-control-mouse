@@ -57,7 +57,7 @@ handles.EyeDetector = vision.CascadeObjectDetector('EyePairBig');
 handles.loop = false;
 handles.debug_Mode=1;
 % Set up data gathering condition
-%handles.gather = false;
+handles.gather = false;
 handles.DIVrow=20;
 handles.DIVcol=20;
 % Choose default command line output for facecamvid
@@ -99,30 +99,21 @@ if isTextStart
     cam = webcam();
     handles.loop = true; %Create stop_now in the handles structure
     guidata(hObject,handles);  %Update the GUI data
-    marker = false;
     j = 0;
-    frameCounter = 0;
-%     oneCounter = 0;
-%     twoCounter = 0;
-%     threeCounter = 0;
-%     fourCounter = 0;
-%     fiveCounter = 0;
-%     sixCounter = 0;
-%     sevenCounter = 0;
-%     eightCounter = 0;
     aCol = [];
     aRow = [];
     mCol = [];
     mRow = [];
+    testCol = [];
+    testRow = [];
     import java.awt.Robot;
     import java.awt.event.*;
     robot=Robot ();
-    pos=get(0,'Pointerlocation');
     EyesFrame = [];
     dx=[];
     dy=[];
     videoFrame = rgb2gray((snapshot(cam)));
-    %Detect face
+    %Detect face until a face is acquired
     Face = step(handles.FaceDetector, videoFrame);
     faceCheck = size(Face);
     if faceCheck(1) > 1
@@ -130,13 +121,13 @@ if isTextStart
     elseif faceCheck(1) < 1
         while faceCheck(1) < 1
             videoFrame = rgb2gray((snapshot(cam)));
-            %Detect face
             Face = step(handles.FaceDetector, videoFrame);
             faceCheck = size(Face);
         end
         Face = Face(1,:);
     end
     cVFrame = imcrop(videoFrame, Face);
+    %Detect eyes. If no eyes detected, redo face detection
     EyesFrame = step(handles.EyeDetector, cVFrame);
     eyeCheck = size(EyesFrame);
     if eyeCheck(1) > 1
@@ -152,7 +143,6 @@ if isTextStart
             elseif faceCheck(1) < 1
                 while faceCheck(1) < 1
                     videoFrame = rgb2gray((snapshot(cam)));
-                    %Detect face
                     Face = step(handles.FaceDetector, videoFrame);
                     faceCheck = size(Face);
                 end
@@ -170,15 +160,11 @@ if isTextStart
     BAS=zeros(handles.DIVrow,handles.DIVcol);
     a = tic;
     while handles.loop
-        %tic;
-        %pause(0.25)
 
         videoFrame = rgb2gray((snapshot(cam)));
         cVFrame = imcrop(videoFrame, Face); %For fixed detection
-        
-        %Detect eyes
 
-        %Separate the two eyes
+        %Separate the two eyes, crop right eye
         EyesBox1 = EyesFrame;
         EyesBox1(3) = EyesBox1(3)/2;
         secCrop = EyesBox1;
@@ -188,15 +174,7 @@ if isTextStart
         secCrop(2)= secCrop(2) + 0.25 * secCrop(4);
         secCrop(4) = secCrop(4) * 0.4;
         videoRightEye = imcrop(cVFrame,secCrop);
-        %Crop left eye
-%                 secCrop = EyesBox;
-%                 secCrop(3) = secCrop(3)/2;
-%                 secCrop(1) = secCrop(1) + space+0.3*space;
-%                 secCrop(3) = secCrop(3) - 0.5 *space;
-%                 secCrop(2)=secCrop(2)+ 0.25*secCrop(4);
-%                 secCrop(4) = secCrop(4) *0.4;
-%                 videoLeftEye = imcrop(Face,secCrop);
-%                 figure(11); subplot(2,1,1); imagesc(fliplr(videoRightEye)); subplot(2,1,2); imagesc(fliplr(videoLeftEye)); colormap gray
+        
         %Interpolation, image resize      
         imClass = class(videoRightEye);
         [x y] = meshgrid(1:size(videoRightEye,2), 1:size(videoRightEye,1));
@@ -213,7 +191,6 @@ if isTextStart
         videoRightEye(find(videoRightEye>12)) = 255;
         %make data double precision
         z = double(videoRightEye);
-        %average three frames
 
 
         [x y]=ndgrid(1:size(z,1),1:size(z,2));
@@ -223,20 +200,15 @@ if isTextStart
         %plots the data using curve fitting
         sf=fit([x1,y1],z1,'poly25');
         z=sf(x,y);
-        %sets the corners to 255
-        %z(find(x<0.2*size(x,1) | y<0.4*size(y,1)| x>0.8*size(x,1) | y>0.8*size(y,2)))=255;
         %find minimum of the curve
-        [row,col]=find(z==min(min(z)));
-        %marker = true;        
+        [row,col]=find(z==min(min(z)));      
 
-        %When gather data button is pressed, find position data
-        %normalized to 100pxs regardless of image resolution.
-        %if handles.gather
+        %find position data normalized to screen size regardless of image resolution.
         cFrameSize = size(vRightEye);
         height = cFrameSize(1);
         width = cFrameSize(2);
-%         normalWidth = 1881;
-%         normalHeight = 818;
+        %normalWidth = 1881;
+        %normalHeight = 818;
         normalWidth = 1920;
         normalHeight = 1080;
 
@@ -247,27 +219,29 @@ if isTextStart
 
         aCol = [aCol, normalCol];
         aRow = [aRow, normalRow];
-        %insert marker cluster
-        for d=1:length(aCol)
-            %d=length(aCol);
-            mCol = round(aCol./wRatio);
-            mRow = round(aRow./hRatio);
-            tt1=mRow(d);
-            tt2=mCol(d);
-            try
-                vRightEye(tt1,tt2)=255;
-            catch
-            end
+        %if gather data button pressed, store data in separate test array
+        if handles.gather
+            testCol = [testCol, normalCol];
+            testRow = [testRow, normalRow];
         end
+        
+        %insert marker cluster
+        d=length(aCol);
+        mCol = round(aCol./wRatio);
+        mRow = round(aRow./hRatio);
+        tt1=mRow(d);
+        tt2=mCol(d);
+        try
+            vRightEye(tt1,tt2)=255;
+        catch
+        end
+
         dx=[dx mCol(1)-mCol(length(mCol))];
         dy=[dy mRow(1)-mRow(length(mRow))];
         axes(handles.axes2);
         cla(handles.axes2);
         %display image on axes 2
         imagesc(fliplr(vRightEye)); colormap gray
-        
-%         pos = [normalWidth - tt2*wRatio + 10, tt1*hRatio + 200];
-%         robot.mouseMove(pos(1),pos(2));
 
 %Displays grid. If program lags, comment out.
 %         for i=1:handles.DIVrow
@@ -276,38 +250,37 @@ if isTextStart
 %         for i=1:handles.DIVcol
 %             line( [(i-1)*width/handles.DIVcol+1 (i-1)*width/handles.DIVcol+1], [0 height],'Color','r');
 %         end
-        
-        BAS=patchandmovemouse(mRow(d),mCol(d),width,height,BAS,handles.DIVrow,handles.DIVcol);
+%         
+         BAS=patchandmovemouse(mRow(d),mCol(d),width,height,BAS,handles.DIVrow,handles.DIVcol);
        
                
         %Once enough markers are found, output average position
         %data with mins and max.
-%         j = j + 1;
-%         if  j==60
-%             handles.gather = false;
-%             j = 0;
-%             averageCol = mean(aCol)  %Column for X coordinate
-%             maxCol = max(aCol)
-%             minCol = min(aCol)
-%             averageRow = mean(aRow) %Row for Y coordinate
-%             maxRow = max(aRow)
-%             minRow = min(aRow)
-%             hObject.String = 'Start';
-%             handles.loop = false;
-%             guidata(hObject, handles);
-%         end
+        if handles.gather 
+            j = j + 1;
+            if  j==60
+                handles.gather = false;
+                j = 0;
+                averageCol = mean(testCol) %Column for X coordinate
+                maxCol = max(testCol)
+                minCol = min(testCol)
+                averageRow = mean(testRow) %Row for Y coordinate
+                maxRow = max(testRow)
+                minRow = min(testRow)
+                hObject.String = 'Start';
+                handles.loop = false;
+                guidata(hObject, handles);
+            end
+        end
 
         b=toc(a);
         if b>=1
             X=mean(dx(2:length(dx)));
             Y=mean(dy(2:length(dy)));
             try
-                %nCol=[nCol mCol(1)+round(X)];
-                %nRow=[nRow mRow(1)+round(Y)];
                 BW=zeros(size(vRightEye)); 
                 BW(mRow(1)-round(Y),mCol(1)-round(X))=1;
                 image=imoverlay(vRightEye,BW,'red');
-                  %vRightEye(mRow(1)+round(Y),mCol(1)+round(X))=70;
             catch
             end
             
@@ -322,12 +295,7 @@ if isTextStart
             a=tic;
         end
 
-
-%         a=toc;
-%         set(handles.text5, 'String', num2str(1/a));
         handles = guidata(hObject);  %Get the newest GUI data
-        %             catch
-        %             end
     end
     elseif isTextStop
         hObject.String = 'Start';
@@ -338,10 +306,10 @@ end
  
  
 % --- Executes on button press in pushbutton5.
-%function pushbutton5_Callback(hObject, eventdata, handles)
+function pushbutton6_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton5 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-%handles.gather = true; 
-%guidata(hObject, handles); %Get the newest GUI data   
-%end
+handles.gather = true; 
+guidata(hObject, handles); %Get the newest GUI data   
+end
